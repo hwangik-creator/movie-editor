@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineHub Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), 
+                        url('https://nenya.doubanio.com/view/photo/xl/public/p2926580813.jpg?sa_cv=91beb5fa79099b330b780ecdda3cb9a3&sa_ct=6ad0d02e');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #06080d;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    .home-container {
+      width: 100%;
+      max-width: 1100px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .home-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+
+    .home-title span {
+      color: #00e054;
+    }
+
+    .home-subtitle {
+      font-size: 0.95rem;
+      color: #9ab;
+      margin-bottom: 35px;
+      font-weight: 500;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+        max-width: 380px;
+      }
+    }
+
+    .menu-card {
+      background: rgba(20, 24, 28, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #ffffff;
+      transition: all 0.3s ease;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-6px);
+      border-color: #00e054;
+      background: rgba(25, 30, 36, 0.9);
+      box-shadow: 0 20px 40px rgba(0, 224, 84, 0.2);
+    }
+
+    .menu-card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .card-icon {
+      width: 55px;
+      height: 55px;
+      background: rgba(0, 224, 84, 0.15);
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      color: #00e054;
+      margin-bottom: 18px;
+      transition: background 0.3s ease;
+    }
+
+    .menu-card:hover .card-icon {
+      background: #00e054;
+      color: #14181c;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: #9ab;
+      line-height: 1.4;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(0, 224, 84, 0.2);
+      color: #00e054;
+    }
+
+    .card-badge.soon {
+      background: rgba(255, 128, 0, 0.2);
+      color: #ff8000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="home-container">
+    <h1 class="home-title">Cine<span>Hub</span> Collection</h1>
+    <p class="home-subtitle">Pilih perangkat visual dan statistik sinema pribadi kamu.</p>
+
+    <div class="menu-grid">
+      <!-- Tombol Menu Kalender -->
+      <a href="https://sites.google.com/view/kalenderhwangik/movie-calendar" class="menu-card">
+        <div class="card-badge">Active</div>
+        <div class="card-icon">
+          <i class="fa-solid fa-calendar-days"></i>
+        </div>
+        <div class="card-title">Monthly Calendar</div>
+        <div class="card-desc">Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.</div>
+      </a>
+
+      <!-- Menu 2 (Akan datang) -->
+      <div class="menu-card disabled">
+        <div class="card-badge soon">Soon</div>
+        <div class="card-icon">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="card-title">Stats Visualizer</div>
+        <div class="card-desc">Analisis genre, aktor favorit, dan distribusi rating tahunan.</div>
+      </div>
+
+      <!-- Menu 3 (Akan datang) -->
+      <div class="menu-card disabled">
+        <div class="card-badge soon">Soon</div>
+        <div class="card-icon">
+          <i class="fa-solid fa-film"></i>
+        </div>
+        <div class="card-title">Custom Posters</div>
+        <div class="card-desc">Generator template poster ulasan film siap post untuk media sosial.</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
