@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hwang</title>
+  <title>CineHub Collection</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -14,7 +14,7 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      /* Memanggil gambar lokal yang sudah di-upload langsung ke repository GitHub */
+      /* Background gambar lokal di GitHub, pastikan file gambar bernama bg.jpg */
       background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), 
                         url('bg.jpg');
       background-size: cover;
@@ -39,6 +39,17 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
+      position: relative;
+      height: 100vh;
+      justify-content: space-between;
+    }
+
+    .content-wrapper {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
     }
 
     .home-title {
@@ -153,44 +164,62 @@
       background: rgba(255, 128, 0, 0.2);
       color: #ff8000;
     }
+
+    /* Footer Estetik di Bawah */
+    .home-footer {
+      font-size: 0.75rem;
+      color: #789;
+      margin-bottom: 15px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      letter-spacing: 0.3px;
+    }
   </style>
 </head>
 <body>
 
   <div class="home-container">
-    <h1 class="home-title">Cine<span>Hub</span> Collection</h1>
-    <p class="home-subtitle">Pilih perangkat visual dan statistik sinema pribadi kamu.</p>
+    <div></div> <!-- Spacer atas -->
 
-    <div class="menu-grid">
-      <!-- Tombol 1: Monthly Calendar -->
-      <a href="https://sites.google.com/view/kalenderhwangik/movie-calendar" class="menu-card">
-        <div class="card-badge">Active</div>
-        <div class="card-icon">
-          <i class="fa-solid fa-calendar-days"></i>
-        </div>
-        <div class="card-title">Monthly Calendar</div>
-        <div class="card-desc">Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.</div>
-      </a>
+    <div class="content-wrapper">
+      <h1 class="home-title">Cine<span>Hub</span> Collection</h1>
+      <p class="home-subtitle">Dibuat dan digunakan untuk keperluan pribadi.</p>
 
-      <!-- Tombol 2: Custom Posters (Review Generator) -->
-      <a href="https://sites.google.com/view/dual-picture-signature-templat/poster-reviewer" class="menu-card">
-        <div class="card-badge">Active</div>
-        <div class="card-icon">
-          <i class="fa-solid fa-film"></i>
-        </div>
-        <div class="card-title">Custom Posters</div>
-        <div class="card-desc">Generator template poster ulasan film siap post untuk media sosial.</div>
-      </a>
+      <div class="menu-grid">
+        <!-- Tombol 1: Monthly Calendar -->
+        <a href="https://sites.google.com/view/kalenderhwangik/movie-calendar" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div class="card-title">Monthly Calendar</div>
+          <div class="card-desc">Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.</div>
+        </a>
 
-      <!-- Tombol 3: Stats Visualizer (Segera) -->
-      <div class="menu-card disabled">
-        <div class="card-badge soon">Soon</div>
-        <div class="card-icon">
-          <i class="fa-solid fa-chart-pie"></i>
+        <!-- Tombol 2: Custom Posters (Review Generator) -->
+        <a href="https://sites.google.com/view/dual-picture-signature-templat/poster-reviewer" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-film"></i>
+          </div>
+          <div class="card-title">Custom Posters</div>
+          <div class="card-desc">Generator template poster ulasan film siap post untuk media sosial.</div>
+        </a>
+
+        <!-- Tombol 3: Stats Visualizer (Segera) -->
+        <div class="menu-card disabled">
+          <div class="card-badge soon">Soon</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div class="card-title">Stats Visualizer</div>
+          <div class="card-desc">Analisis genre, aktor favorit, dan distribusi rating tahunan.</div>
         </div>
-        <div class="card-title">Stats Visualizer</div>
-        <div class="card-desc">Analisis genre, aktor favorit, dan distribusi rating tahunan.</div>
       </div>
+    </div>
+
+    <!-- Footer Bawah -->
+    <div class="home-footer">
+      Inspired by Letterboxd. 100% by Gemini
     </div>
   </div>
 
