@@ -42,7 +42,7 @@
       background-repeat: no-repeat;
       z-index: -1;
       opacity: 0;
-      transition: opacity 1.2s ease-in-out; /* Durasi efek faded */
+      transition: opacity 1.2s ease-in-out;
     }
 
     .bg-layer.loaded {
@@ -204,9 +204,53 @@
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
       letter-spacing: 0.3px;
     }
+
+    /* Layar Peringatan Khusus Mobile / HP */
+    #mobileBlocker {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #14181c;
+      z-index: 99999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    #mobileBlocker i {
+      font-size: 3rem;
+      color: #ff8000;
+      margin-bottom: 20px;
+    }
+
+    #mobileBlocker h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    #mobileBlocker p {
+      font-size: 0.9rem;
+      color: #9ab;
+      max-width: 320px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Layar Peringatan Khusus HP -->
+  <div id="mobileBlocker">
+    <i class="fa-solid fa-laptop"></i>
+    <h2>Desktop Only</h2>
+    <p>Hwang's CineHub dirancang khusus untuk pengalaman visual optimal di PC atau Laptop. Silakan akses melalui perangkat desktop kamu!</p>
+  </div>
 
   <!-- Layer Background Dinamis & Overlay -->
   <div id="bgLayer" class="bg-layer"></div>
@@ -259,6 +303,18 @@
   </div>
 
   <script>
+    // Cek apakah perangkat berupa HP/Mobile atau layar kecil (lebar di bawah 900px)
+    function checkDevice() {
+      const isMobileScreen = window.innerWidth <= 900;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobileScreen || isMobileUA) {
+        document.getElementById('mobileBlocker').style.display = 'flex';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkDevice);
+
     const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
 
     Papa.parse(BG_SHEET_CSV_URL, {
@@ -271,11 +327,7 @@
           
           if (bgUrl && bgUrl.startsWith("http")) {
             const bgLayer = document.getElementById("bgLayer");
-            
-            // Set background image pada layer khusus
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
-            
-            // Beri sedikit jeda mikro lalu aktifkan kelas 'loaded' untuk efek faded masuk (fade-in)
             setTimeout(() => {
               bgLayer.classList.add("loaded");
             }, 100);
