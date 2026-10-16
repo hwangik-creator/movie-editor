@@ -205,7 +205,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* Layar Peringatan Khusus Mobile / HP */
+    /* Layar Peringatan Anti-Desktop Mode */
     #mobileBlocker {
       display: none;
       position: fixed;
@@ -245,11 +245,11 @@
 </head>
 <body>
 
-  <!-- Layar Peringatan Khusus HP -->
+  <!-- Layar Peringatan Mutlak untuk HP -->
   <div id="mobileBlocker">
     <i class="fa-solid fa-laptop"></i>
     <h2>Desktop Only</h2>
-    <p>Hwang's CineHub dirancang khusus untuk pengalaman visual optimal di PC atau Laptop. Silakan akses melalui perangkat desktop kamu!</p>
+    <p>Khusus untuk pengalaman visual optimal di PC atau Laptop, silahkan ganti device.</p>
   </div>
 
   <!-- Layer Background Dinamis & Overlay -->
@@ -303,17 +303,23 @@
   </div>
 
   <script>
-    // Cek apakah perangkat berupa HP/Mobile atau layar kecil (lebar di bawah 900px)
-    function checkDevice() {
-      const isMobileScreen = window.innerWidth <= 900;
-      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Deteksi Mutlak Perangkat HP (Bahkan mendeteksi fitur Touchscreen & User Agent Mobile meski mode desktop aktif)
+    function enforceDesktopOnly() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
       
-      if (isMobileScreen || isMobileUA) {
+      // Indikator OS Mobile
+      const isMobileOS = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+      
+      // Indikator Layar Sentuh (Touchscreen Device) yang biasanya dimiliki HP/Tablet
+      const isTouchDevice = (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) || ('ontouchstart' in window);
+
+      // Jika terdeteksi sebagai perangkat HP/Mobile (atau tablet sentuh kecil), kunci halaman
+      if (isMobileOS || (isTouchDevice && window.innerWidth <= 1024)) {
         document.getElementById('mobileBlocker').style.display = 'flex';
       }
     }
 
-    window.addEventListener('DOMContentLoaded', checkDevice);
+    window.addEventListener('DOMContentLoaded', enforceDesktopOnly);
 
     const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
 
