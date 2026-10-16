@@ -17,12 +17,6 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      /* Background gambar lokal di GitHub, pastikan file gambar bernama bg.jpg */
-      background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), 
-                        url('bg.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
       background-color: #06080d;
       color: #ffffff;
       font-family: 'Inter', sans-serif;
@@ -32,6 +26,30 @@
       position: fixed;
       top: 0;
       left: 0;
+    }
+
+    /* Background Iframe dari Google Spreadsheet */
+    .bg-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      z-index: -2;
+      pointer-events: none; /* Agar tidak mengganggu klik pada menu */
+    }
+
+    /* Overlay Kegelapan (Dark Gradient Overlay) untuk menjaga legibilitas teks */
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65));
+      z-index: -1;
+      pointer-events: none;
     }
 
     .home-container {
@@ -45,6 +63,7 @@
       position: relative;
       height: 100vh;
       justify-content: space-between;
+      z-index: 1;
     }
 
     .content-wrapper {
@@ -179,6 +198,12 @@
   </style>
 </head>
 <body>
+
+  <!-- Background dari Google Spreadsheet Webpage -->
+  <iframe class="bg-iframe" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pubhtml?widget=false&amp;headers=false"></iframe>
+  
+  <!-- Overlay Hitam Transparan -->
+  <div class="bg-overlay"></div>
 
   <div class="home-container">
     <div></div> <!-- Spacer atas -->
