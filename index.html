@@ -9,7 +9,7 @@
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Library PapaParse untuk parsing CSV background -->
+  <!-- PapaParse Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
@@ -19,12 +19,12 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      /* Background dinamis yang di-inject via JS dari Spreadsheet */
-      background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55));
+      /* Default background gelap jika gambar sedang dimuat */
+      background-color: #06080d;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6));
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: #06080d;
       color: #ffffff;
       font-family: 'Inter', sans-serif;
       display: flex;
@@ -33,6 +33,7 @@
       position: fixed;
       top: 0;
       left: 0;
+      transition: background-image 0.5s ease-in-out;
     }
 
     .home-container {
@@ -46,6 +47,7 @@
       position: relative;
       height: 100vh;
       justify-content: space-between;
+      z-index: 10;
     }
 
     .content-wrapper {
@@ -169,7 +171,7 @@
       color: #ff8000;
     }
 
-    /* Footer Estetik di Bawah */
+    /* Footer Estetik */
     .home-footer {
       font-size: 0.75rem;
       color: #789;
@@ -228,27 +230,66 @@
   </div>
 
   <script>
-    const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
+    const RAW_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
+    
+    // Gunakan CORS Proxy agar tidak di-block oleh browser
+    const PROXY_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(RAW_CSV_URL);
 
-    Papa.parse(BG_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        if (results.data && results.data.length > 0) {
-          // Mengambil URL background dari baris pertama spreadsheet (sesuaikan nama kolom header jika diperlukan, misal: 'url', 'background', atau kolom pertama)
-          const firstRow = results.data[0];
-          const bgUrl = firstRow['url'] || firstRow['background'] || Object.values(firstRow)[0];
-          
-          if (bgUrl && bgUrl.startsWith('http')) {
-            document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${bgUrl.trim()}')`;
+    async function loadBackground() {
+      try {
+        const response = await fetch(PROXY_URL);
+        if (!response.ok) throw new Error("Gagal mengambil data CSV");
+        
+        const csvText = await response.text();
+        
+        Papa.parse(csvText, {
+          header: false, // Membaca sebagai Array murni tanpa tergantung nama header
+          skipEmptyLines: true,
+          complete: function(results) {
+            if (results.data && results.data.length > 0) {
+              // Cari string URL gambar pertama di dalam file CSV
+              let imageUrl = "";
+              for (let row of results.data) {
+                for (let cell of row) {
+                  if (cell && typeof cell === 'string' && (cell.trim().startsWith('http://') || cell.trim().startsWith('https://'))) {
+                    imageUrl = cell.trim();
+                    break;
+                  }
+                }
+                if (imageUrl) break;
+              }
+
+              if (imageUrl) {
+                // Preload gambar dulu agar tidak blank saat dipasang
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = () => {
+                  document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${imageUrl}')`;
+                };
+              }
+            }
           }
-        }
-      },
-      error: function(err) {
-        console.warn("Gagal memuat background dari spreadsheet:", err);
+        });
+      } catch (error) {
+        console.warn("Fallback CORS Proxy 1 gagal, mencoba direct fetch...", error);
+        // Fallback langsung jika proxy bermasalah
+        Papa.parse(RAW_CSV_URL, {
+          download: true,
+          header: false,
+          skipEmptyLines: true,
+          complete: function(results) {
+            if (results.data && results.data[0]) {
+              const imageUrl = results.data[0].find(cell => cell && cell.trim().startsWith('http'));
+              if (imageUrl) {
+                document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${imageUrl.trim()}')`;
+              }
+            }
+          }
+        });
       }
-    });
+    }
+
+    loadBackground();
   </script>
 
 </body>
