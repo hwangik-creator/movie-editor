@@ -21,7 +21,7 @@
       overflow: hidden;
       /* Default background gelap jika gambar sedang dimuat */
       background-color: #06080d;
-      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6));
+      background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55));
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -230,66 +230,34 @@
   </div>
 
   <script>
-    const RAW_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
-    
-    // Gunakan CORS Proxy agar tidak di-block oleh browser
-    const PROXY_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(RAW_CSV_URL);
+    const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
 
-    async function loadBackground() {
-      try {
-        const response = await fetch(PROXY_URL);
-        if (!response.ok) throw new Error("Gagal mengambil data CSV");
-        
-        const csvText = await response.text();
-        
-        Papa.parse(csvText, {
-          header: false, // Membaca sebagai Array murni tanpa tergantung nama header
-          skipEmptyLines: true,
-          complete: function(results) {
-            if (results.data && results.data.length > 0) {
-              // Cari string URL gambar pertama di dalam file CSV
-              let imageUrl = "";
-              for (let row of results.data) {
-                for (let cell of row) {
-                  if (cell && typeof cell === 'string' && (cell.trim().startsWith('http://') || cell.trim().startsWith('https://'))) {
-                    imageUrl = cell.trim();
-                    break;
-                  }
-                }
-                if (imageUrl) break;
-              }
-
-              if (imageUrl) {
-                // Preload gambar dulu agar tidak blank saat dipasang
-                const img = new Image();
-                img.src = imageUrl;
-                img.onload = () => {
-                  document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${imageUrl}')`;
-                };
-              }
-            }
+    Papa.parse(BG_SHEET_CSV_URL, {
+      download: true,
+      header: false,
+      skipEmptyLines: true,
+      complete: function(results) {
+        if (results.data && results.data.length > 0 && results.data[0].length > 0) {
+          // Mengambil nilai dari sel A1 secara langsung
+          const bgUrl = results.data[0][0].trim();
+          
+          if (bgUrl && bgUrl.startsWith("http")) {
+            // Preload gambar untuk memastikan URL valid dan siap
+            const img = new Image();
+            img.src = bgUrl;
+            img.onload = function() {
+              document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${bgUrl}')`;
+            };
+            img.onerror = function() {
+              console.warn("Gagal memuat gambar dari URL sel A1:", bgUrl);
+            };
           }
-        });
-      } catch (error) {
-        console.warn("Fallback CORS Proxy 1 gagal, mencoba direct fetch...", error);
-        // Fallback langsung jika proxy bermasalah
-        Papa.parse(RAW_CSV_URL, {
-          download: true,
-          header: false,
-          skipEmptyLines: true,
-          complete: function(results) {
-            if (results.data && results.data[0]) {
-              const imageUrl = results.data[0].find(cell => cell && cell.trim().startsWith('http'));
-              if (imageUrl) {
-                document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('${imageUrl.trim()}')`;
-              }
-            }
-          }
-        });
+        }
+      },
+      error: function(err) {
+        console.warn("Gagal membaca CSV dari spreadsheet:", err);
       }
-    }
-
-    loadBackground();
+    });
   </script>
 
 </body>
