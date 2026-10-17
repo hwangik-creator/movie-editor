@@ -17,24 +17,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
+      width: 100%;
+      min-height: 100vh;
       background-color: #06080d;
       color: #ffffff;
       font-family: 'Inter', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
       opacity: 1;
       transition: opacity 0.3s ease-in-out;
+      overflow-x: hidden;
     }
 
     .bg-layer {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
@@ -44,11 +38,10 @@
       background-position: center;
       background-repeat: no-repeat;
       z-index: -1;
-      opacity: 1;
     }
 
     .bg-overlay {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
@@ -61,23 +54,16 @@
     .home-container {
       width: 100%;
       max-width: 1200px;
-      padding: 20px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 40px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       text-align: center;
       position: relative;
-      height: 100vh;
-      justify-content: space-between;
       z-index: 10;
-    }
-
-    .content-wrapper {
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
     }
 
     .home-title {
@@ -93,7 +79,7 @@
     .home-subtitle {
       font-size: 0.95rem;
       color: #9ab;
-      margin-bottom: 30px;
+      margin-bottom: 35px;
       font-weight: 500;
       text-shadow: 0 2px 10px rgba(0,0,0,0.7);
     }
@@ -103,6 +89,7 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       width: 100%;
+      margin-bottom: 30px;
     }
 
     @media (max-width: 1024px) {
@@ -195,7 +182,7 @@
     .home-footer {
       font-size: 0.75rem;
       color: #789;
-      margin-bottom: 15px;
+      margin-top: 10px;
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
 
@@ -255,23 +242,20 @@
   <div class="bg-overlay"></div>
 
   <div class="home-container">
-    <div></div>
-    
-    <div class="content-wrapper">
+    <div>
       <h1 class="home-title">Hwang's <span>Tools</span></h1>
       <p class="home-subtitle">Dibuat dan digunakan untuk keperluan pribadi.</p>
-
-      <!-- Tempat render tombol dari menu-config.js -->
-      <div class="menu-grid" id="menuGrid"></div>
     </div>
+
+    <!-- Tempat render tombol dari menu-config.js -->
+    <div class="menu-grid" id="menuGrid"></div>
 
     <div class="home-footer">
       Inspired by Letterboxd. 100% AI things
     </div>
   </div>
 
-  <!-- Versi script dinaikkan agar cache browser diperbarui -->
-  <script src="menu-config.js?v=6"></script>
+  <script src="menu-config.js?v=7"></script>
 
   <script>
     function isUnsupportedDevice() {
