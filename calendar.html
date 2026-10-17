@@ -6,14 +6,10 @@
   <title>Monthly Movie Calendar - Hwang's Tools</title>
   <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=wd93opJhF4VC&format=png&color=FFFFFF">
   
-  <!-- JSZip untuk membaca file ZIP Letterboxd -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Library PapaParse untuk parsing CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <!-- Google Fonts & FontAwesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- html2canvas untuk Export PNG Resolusi Tinggi -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -25,17 +21,14 @@
       --letterboxd-green: #00e054;
       --max-w: 1000px;
       --bg-dim: 0.35;
-
       --panel-bg: rgba(20, 24, 28, 0.72);
       --panel-blur: 12px;
       --cell-bg: rgba(30, 38, 44, 0.65);
-
       --rating-size: 0.10;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Kunci layar penuh agar tidak ada scrollbar liar saat dimuat */
     html, body {
       width: 100vw;
       height: 100vh;
@@ -46,8 +39,6 @@
       position: fixed;
       top: 0;
       left: 0;
-      opacity: 1;
-      transition: opacity 0.3s ease-in-out;
     }
 
     body {
@@ -56,7 +47,20 @@
       justify-content: center;
     }
 
-    /* LATAR BELAKANG HALAMAN (Langsung Link ImgBB Fixed) */
+    /* Lapisan Transisi Masuk/Keluar (Mencegah Blank Hitam & Kedip) */
+    .page-transition-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: #06080d;
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.35s ease-in-out;
+    }
+    body.loaded .page-transition-overlay {
+      opacity: 0;
+    }
+
     #bgLayer {
       position: fixed;
       inset: 0;
@@ -75,7 +79,6 @@
       pointer-events: none;
     }
 
-    /* TOMBOL KEMBALI KE HOME */
     .btn-back-home {
       position: fixed;
       top: 20px;
@@ -105,7 +108,6 @@
       transform: translateX(-3px);
     }
 
-    /* ===== PESAN "HANYA DESKTOP" ===== */
     .desktop-notice {
       display: none;
       position: fixed;
@@ -155,7 +157,6 @@
       .desktop-notice { display: flex; }
     }
 
-    /* Layout Utama di tengah layar tanpa scroll */
     .main-wrapper {
       position: relative;
       z-index: 1;
@@ -500,146 +501,138 @@
 </head>
 <body>
 
-<!-- TOMBOL KEMBALI KE HOME -->
-<a href="index.html" class="btn-back-home" id="btnBack">
-  <i class="fa-solid fa-arrow-left"></i> Home
-</a>
+  <!-- Lapisan Overlay Transisi Masuk/Keluar -->
+  <div class="page-transition-overlay" id="pageOverlay"></div>
 
-<!-- PESAN: HANYA DAPAT DIAKSES VIA DESKTOP -->
-<div class="desktop-notice" id="desktopNotice" role="alert">
-  <div class="dn-card">
-    <div class="dn-icon"><i class="fa-solid fa-desktop"></i></div>
-    <div class="dn-badge">Desktop</div>
-    <div class="dn-title">Hanya Tersedia di Desktop</div>
-    <p class="dn-text">
-      Hanya dapat diakses melalui komputer atau laptop (desktop).
-      Silakan buka kembali halaman ini menggunakan perangkat desktop agar seluruh fitur dapat berjalan dengan baik.
-    </p> 
-  </div>
-</div>
+  <a href="index.html" class="btn-back-home" id="btnBack">
+    <i class="fa-solid fa-arrow-left"></i> Home
+  </a>
 
-<!-- Lapisan background halaman -->
-<div id="bgLayer"></div>
-<div class="bg-overlay"></div>
-
-<div class="main-wrapper">
-
-  <!-- PANEL KONTROL (KOLOM KIRI) -->
-  <div class="control-panel">
-    <h3><i class="fa-solid fa-sliders"></i> Pengaturan Data Film Kalender</h3>
-
-    <div class="form-grid">
-      <div class="form-group full-width">
-        <label>1. Upload File ZIP Letterboxd</label>
-        <input type="file" id="zipFile" accept=".zip" onchange="handleZipUpload(event)">
-        <div class="zip-hint">Cara mendapatkan: Letterboxd → Settings → Data → Export Your Data. File diproses di browser Anda.</div>
-        <div class="zip-status" id="zipStatus"></div>
-      </div>
-
-      <div class="form-group">
-        <label>Pilih Bulan</label>
-        <select id="selectMonth" onchange="updateCalendarSettings()">
-          <option value="0">Januari</option>
-          <option value="1">Februari</option>
-          <option value="2">Maret</option>
-          <option value="3">April</option>
-          <option value="4">Mei</option>
-          <option value="5">Juni</option>
-          <option value="6">Juli</option>
-          <option value="7">Agustus</option>
-          <option value="8">September</option>
-          <option value="9" selected>Oktober</option>
-          <option value="10">November</option>
-          <option value="11">Desember</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Input Tahun</label>
-        <input type="text" id="selectYear" value="2026" oninput="updateCalendarSettings()">
-      </div>
-
-      <div class="form-group full-width">
-        <label>Link Letterboxd Kamu</label>
-        <input type="text" id="inputLetterboxdLink" value="letterboxd.com/hwangik" placeholder="letterboxd.com/username" oninput="updateHandle()">
-      </div>
-
-      <div class="form-group full-width">
-        <label>2. Paste Massal Link Poster (1 link per baris)</label>
-        <textarea id="bulkPosterInput" placeholder="https://image.tmdb.org/t/p/original/..."></textarea>
-      </div>
-    </div>
-
-    <div class="btn-group">
-      <button id="btnApply" onclick="applyPosters()"><i class="fa-solid fa-wand-magic-sparkles"></i> Terapkan</button>
-      <button class="btn-export" onclick="exportPNG()"><i class="fa-solid fa-download"></i> Export PNG (HD)</button>
+  <div class="desktop-notice" id="desktopNotice" role="alert">
+    <div class="dn-card">
+      <div class="dn-icon"><i class="fa-solid fa-desktop"></i></div>
+      <div class="dn-badge">Desktop</div>
+      <div class="dn-title">Hanya Tersedia di Desktop</div>
+      <p class="dn-text">Hanya dapat diakses melalui komputer atau laptop (desktop).</p> 
     </div>
   </div>
 
-  <!-- AREA KANVAS KALENDER (KOLOM KANAN) -->
-  <div id="captureArea">
-    <div class="calendar-header">
-      <div class="month-title" id="displayMonthYear">Oktober 2026</div>
-      <div class="total-subtitle" id="totalWatchedText">Total 0 films watched</div>
-    </div>
+  <div id="bgLayer"></div>
+  <div class="bg-overlay"></div>
 
-    <div class="calendar-block" id="calendarBlock">
-      <div class="weekdays-grid">
-        <div>Senin</div>
-        <div>Selasa</div>
-        <div>Rabu</div>
-        <div>Kamis</div>
-        <div>Jumat</div>
-        <div>Sabtu</div>
-        <div>Minggu</div>
-      </div>
+  <div class="main-wrapper">
+    <div class="control-panel">
+      <h3><i class="fa-solid fa-sliders"></i> Pengaturan Data Film Kalender</h3>
 
-      <div class="calendar-grid" id="calendarGrid">
-        <!-- Grid dirender otomatis via JS -->
-      </div>
-    </div>
-
-    <!-- FOOTER LETTERBOXD -->
-    <div class="user-profile-card">
-      <div class="lbxd-brand">
-        <div class="lbxd-dots">
-          <span style="color:#00e054;">●</span><span style="color:#ff8000;">●</span><span style="color:#40bcf4;">●</span>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>1. Upload File ZIP Letterboxd</label>
+          <input type="file" id="zipFile" accept=".zip" onchange="handleZipUpload(event)">
+          <div class="zip-hint">Cara mendapatkan: Letterboxd → Settings → Data → Export Your Data.</div>
+          <div class="zip-status" id="zipStatus"></div>
         </div>
-        <span class="brand-name">Letterboxd</span>
+
+        <div class="form-group">
+          <label>Pilih Bulan</label>
+          <select id="selectMonth" onchange="updateCalendarSettings()">
+            <option value="0">Januari</option>
+            <option value="1">Februari</option>
+            <option value="2">Maret</option>
+            <option value="3">April</option>
+            <option value="4">Mei</option>
+            <option value="5">Juni</option>
+            <option value="6">Juli</option>
+            <option value="7">Agustus</option>
+            <option value="8">September</option>
+            <option value="9" selected>Oktober</option>
+            <option value="10">November</option>
+            <option value="11">Desember</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Input Tahun</label>
+          <input type="text" id="selectYear" value="2026" oninput="updateCalendarSettings()">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Link Letterboxd Kamu</label>
+          <input type="text" id="inputLetterboxdLink" value="letterboxd.com/hwangik" placeholder="letterboxd.com/username" oninput="updateHandle()">
+        </div>
+
+        <div class="form-group full-width">
+          <label>2. Paste Massal Link Poster (1 link per baris)</label>
+          <textarea id="bulkPosterInput" placeholder="https://image.tmdb.org/t/p/original/..."></textarea>
+        </div>
       </div>
-      <div class="user-handle-info">
-        <span class="handle-text js-handle">letterboxd.com/hwangik</span>
-        <span class="sub-cta">Follow on Letterboxd</span>
+
+      <div class="btn-group">
+        <button id="btnApply" onclick="applyPosters()"><i class="fa-solid fa-wand-magic-sparkles"></i> Terapkan</button>
+        <button class="btn-export" onclick="exportPNG()"><i class="fa-solid fa-download"></i> Export PNG (HD)</button>
+      </div>
+    </div>
+
+    <div id="captureArea">
+      <div class="calendar-header">
+        <div class="month-title" id="displayMonthYear">Oktober 2026</div>
+        <div class="total-subtitle" id="totalWatchedText">Total 0 films watched</div>
+      </div>
+
+      <div class="calendar-block" id="calendarBlock">
+        <div class="weekdays-grid">
+          <div>Senin</div>
+          <div>Selasa</div>
+          <div>Rabu</div>
+          <div>Kamis</div>
+          <div>Jumat</div>
+          <div>Sabtu</div>
+          <div>Minggu</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="user-profile-card">
+        <div class="lbxd-brand">
+          <div class="lbxd-dots">
+            <span style="color:#00e054;">●</span><span style="color:#ff8000;">●</span><span style="color:#40bcf4;">●</span>
+          </div>
+          <span class="brand-name">Letterboxd</span>
+        </div>
+        <div class="user-handle-info">
+          <span class="handle-text js-handle">letterboxd.com/hwangik</span>
+          <span class="sub-cta">Follow on Letterboxd</span>
+        </div>
       </div>
     </div>
   </div>
-
-</div>
 
 <script>
-  // Script Transisi Halus saat klik "Home"
+  // Efek Fade-In saat halaman mulai terbuka
+  window.addEventListener("DOMContentLoaded", () => {
+    document.body.classList.add("loaded");
+  });
+
+  // Efek Fade-Out mulus saat tombol Home diklik tanpa blank hitam
   document.getElementById("btnBack").addEventListener("click", function(e) {
     e.preventDefault();
     const destination = this.href;
-    document.body.style.transition = "opacity 0.3s ease";
-    document.body.style.opacity = "0";
+    const overlay = document.getElementById("pageOverlay");
+    overlay.style.opacity = "1";
     setTimeout(() => {
       window.location.href = destination;
-    }, 300);
+    }, 350);
   });
 
   function isUnsupportedDevice() {
     const ua = navigator.userAgent || '';
     const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
     const touchPoints = navigator.maxTouchPoints || 0;
-
     const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|Opera Mini|IEMobile|BlackBerry|webOS/i.test(ua);
     const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
     const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          
     const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    
     const coarsePrimary = mq('(pointer: coarse)') || mq('(hover: none)');
     const smallScreen = screen.width > 0 && Math.min(screen.width, screen.height) < 480;
-
     return mobileUA || uaDataMobile || macTouch || touchOnly || coarsePrimary || smallScreen;
   }
 
@@ -653,7 +646,6 @@
 
   const EXPORT_SCALE = 4;
   const POSTER_FETCH_W = 800;
-
   let rawCSVRows = [];
   let currentMonthData = [];
 
@@ -736,12 +728,7 @@
         const d = parseInt(dateParts[2].trim());
         const rating = row['Rating'] ? row['Rating'].trim() : '';
 
-        rawCSVRows.push({
-          year: y,
-          month: m,
-          day: d,
-          rating: rating
-        });
+        rawCSVRows.push({ year: y, month: m, day: d, rating: rating });
       }
     });
 
@@ -875,7 +862,6 @@
     const bh = wrapper.offsetHeight;
     const ratio = (bw > 0 && bh > 0) ? bw / bh : 2 / 3;
     const targetW = Math.max(300, Math.round((bw || 80) * EXPORT_SCALE * 2));
-
     const finalSrc = await downscaleDataUrl(src, targetW);
 
     await new Promise(resolve => {
@@ -887,8 +873,7 @@
         let pw = 100, ph = 100;
         if (ri > ratio) pw = (ri / ratio) * 100;
         else ph = (ratio / ri) * 100;
-        img.style.cssText =
-          `position:absolute; width:${pw}%; height:${ph}%; left:${(100 - pw) / 2}%; top:${(100 - ph) / 2}%;`;
+        img.style.cssText = `position:absolute; width:${pw}%; height:${ph}%; left:${(100 - pw) / 2}%; top:${(100 - ph) / 2}%;`;
         wrapper.insertBefore(img, wrapper.firstChild);
         resolve();
       };
@@ -902,7 +887,6 @@
 
   async function applyPosters() {
     const { month, year } = getSelectedMonthYear();
-
     if (currentMonthData.length === 0) {
       alert(`Perhatian: Tidak ada catatan film pada ${monthNames[month]} ${year}!`);
       return;
@@ -925,24 +909,14 @@
       let base64Img = "";
 
       if (url) {
-        try {
-          base64Img = await fetchImageAsBase64(url, POSTER_FETCH_W);
-        } catch (e) {
-          console.warn("Gagal konversi poster:", e);
-        }
+        try { base64Img = await fetchImageAsBase64(url, POSTER_FETCH_W); } catch (e) {}
       }
 
-      if (!groupedByDay[movie.day]) {
-        groupedByDay[movie.day] = [];
-      }
-      groupedByDay[movie.day].push({
-        rating: movie.rating,
-        posterSrc: base64Img || url
-      });
+      if (!groupedByDay[movie.day]) groupedByDay[movie.day] = [];
+      groupedByDay[movie.day].push({ rating: movie.rating, posterSrc: base64Img || url });
     }
 
     const placing = [];
-
     for (let day in groupedByDay) {
       let cell = document.getElementById(`day-${day}`);
       let box = document.getElementById(`poster-box-${day}`);
@@ -950,10 +924,7 @@
 
       const shown = groupedByDay[day].slice(0, 4);
       const n = shown.length;
-
-      if (n > 1) {
-        cell.classList.add('has-multiple');
-      }
+      if (n > 1) cell.classList.add('has-multiple');
 
       box.className = `poster-container count-${n}`;
       box.innerHTML = "";
@@ -975,23 +946,16 @@
     }
 
     await Promise.all(placing);
-
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
 
   function exportPNG() {
     const { month, year } = getSelectedMonthYear();
-
-    if (currentMonthData.length === 0) {
-      alert(`Tidak ada data untuk diekspor pada ${monthNames[month]} ${year}!`);
-      return;
-    }
+    if (currentMonthData.length === 0) return;
 
     updateCellSize();
-    const captureArea = document.getElementById("captureArea");
-
-    html2canvas(captureArea, {
+    html2canvas(document.getElementById("captureArea"), {
       scale: EXPORT_SCALE,
       useCORS: true,
       allowTaint: true,
@@ -1005,14 +969,11 @@
       link.download = `Movie-Calendar-${monthNames[month]}-${year}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-    }).catch(err => {
-      alert("Gagal export gambar: " + err.message);
     });
   }
 
   window.onload = () => {
     if (applyDeviceGate()) return;
-
     updateHandle();
     renderCalendar();
     window.addEventListener('resize', updateCellSize);
@@ -1021,6 +982,5 @@
     }
   };
 </script>
-
 </body>
 </html>
