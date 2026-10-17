@@ -35,32 +35,43 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Kunci layar penuh agar tidak ada scrollbar liar saat dimuat */
     html, body {
-      width: 100%;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       background-color: #06080d;
       color: var(--text-main);
       font-family: 'Inter', sans-serif;
+      position: fixed;
+      top: 0;
+      left: 0;
       opacity: 1;
       transition: opacity 0.3s ease-in-out;
     }
 
     body {
-      min-height: 100vh;
-      padding: 12px;
       display: flex;
-      position: relative;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* LATAR BELAKANG HALAMAN (Langsung Link ImgBB) */
+    /* LATAR BELAKANG HALAMAN (Langsung Link ImgBB Fixed) */
     #bgLayer {
       position: fixed;
       inset: 0;
-      z-index: 0;
+      z-index: -2;
       background-image: linear-gradient(rgba(6,8,13,var(--bg-dim)), rgba(6,8,13,var(--bg-dim))), url("https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg");
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      opacity: 1;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5));
       pointer-events: none;
     }
 
@@ -144,13 +155,11 @@
       .desktop-notice { display: flex; }
     }
 
-    /* Layout Utama */
+    /* Layout Utama di tengah layar tanpa scroll */
     .main-wrapper {
       position: relative;
       z-index: 1;
       width: min(96vw, var(--max-w));
-      margin: auto;
-      margin-top: 50px;
       display: grid;
       grid-template-columns: 30.9% 63.3%;
       column-gap: 5.8%;
@@ -163,18 +172,18 @@
       -webkit-backdrop-filter: blur(var(--panel-blur));
       backdrop-filter: blur(var(--panel-blur));
       border: 1px solid rgba(255, 255, 255, 0.10);
-      padding: 16px;
+      padding: 14px;
       border-radius: 12px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       min-height: 0;
       overflow-y: auto;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .control-panel h3 {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--letterboxd-green);
       display: flex;
       align-items: center;
@@ -184,31 +193,31 @@
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .form-group.full-width { grid-column: span 2; }
 
     .form-group label {
-      font-size: 10.5px;
+      font-size: 10px;
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .zip-hint {
-      font-size: 10px;
-      line-height: 1.4;
+      font-size: 9.5px;
+      line-height: 1.3;
       color: var(--text-muted);
     }
     .zip-status {
-      font-size: 10.5px;
-      line-height: 1.4;
+      font-size: 10px;
+      line-height: 1.3;
       color: #F4D160;
     }
     .zip-status:empty { display: none; }
@@ -217,9 +226,9 @@
       background: #0f1115;
       border: 1px solid #2c3440;
       color: #fff;
-      padding: 7px;
+      padding: 6px;
       border-radius: 6px;
-      font-size: 11px;
+      font-size: 10.5px;
       outline: none;
       width: 100%;
     }
@@ -228,9 +237,9 @@
       color: var(--text-muted);
       background: #0f1115;
       border: 1px solid #2c3440;
-      padding: 3px;
+      padding: 2px;
       border-radius: 6px;
-      font-size: 11px;
+      font-size: 10.5px;
       cursor: pointer;
       width: 100%;
     }
@@ -238,35 +247,33 @@
       background: #222a33;
       color: #ffffff;
       border: 1px solid #3a4654;
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 4px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
       margin-right: 6px;
     }
-    input[type="file"]::file-selector-button:hover { background: #2c3846; }
 
     textarea {
-      height: 90px;
+      height: 70px;
       resize: vertical;
       font-family: monospace;
-      font-size: 10.5px;
+      font-size: 10px;
     }
 
     .btn-group {
       display: flex;
-      gap: 8px;
-      margin-top: 4px;
+      gap: 6px;
+      margin-top: 2px;
     }
 
     button {
       background-color: var(--letterboxd-green);
       color: #14181c;
       border: none;
-      padding: 9px 14px;
+      padding: 8px 12px;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10.5px;
       border-radius: 6px;
       cursor: pointer;
       transition: opacity 0.2s;
@@ -280,7 +287,7 @@
       background-color: var(--panel-bg);
       -webkit-backdrop-filter: blur(var(--panel-blur));
       backdrop-filter: blur(var(--panel-blur));
-      padding: 14px 18px 12px 18px;
+      padding: 12px 16px 10px 16px;
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.10);
       width: 100%;
@@ -300,11 +307,11 @@
 
     .calendar-header {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .month-title {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.5px;
@@ -312,22 +319,22 @@
     }
 
     .total-subtitle {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--letterboxd-green);
       font-weight: 600;
       margin-top: 2px;
     }
 
-    .calendar-block { --cw: 70px; }
+    .calendar-block { --cw: 65px; }
 
     .weekdays-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 5px;
-      margin-bottom: 6px;
+      gap: 4px;
+      margin-bottom: 4px;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -336,7 +343,7 @@
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 6px 5px;
+      gap: 5px 4px;
     }
 
     .day-slot {
@@ -347,10 +354,10 @@
     }
 
     .date-label {
-      height: 12px;
-      line-height: 12px;
+      height: 11px;
+      line-height: 11px;
       text-align: center;
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       color: #bcc8d2;
     }
@@ -359,7 +366,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 2 / 3;
-      border-radius: 5px;
+      border-radius: 4px;
       overflow: hidden;
       background-color: var(--cell-bg);
       border: 1px solid rgba(255, 255, 255, 0.04);
@@ -377,7 +384,7 @@
       height: 100%;
       position: relative;
       overflow: hidden;
-      border-radius: 5px;
+      border-radius: 4px;
       background: transparent;
     }
 
@@ -408,7 +415,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      border-radius: 4px;
+      border-radius: 3px;
     }
 
     .movie-item-wrapper img {
@@ -433,8 +440,8 @@
 
     .user-profile-card {
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 7px;
-      margin-top: 10px;
+      padding-top: 6px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -444,17 +451,17 @@
     .lbxd-brand {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .lbxd-dots {
-      font-size: 10.5px;
+      font-size: 10px;
       letter-spacing: -2px;
       line-height: 1;
     }
 
     .brand-name {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 800;
       color: #ffffff;
     }
@@ -466,24 +473,26 @@
     }
 
     .user-handle-info .handle-text {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       color: #ffffff;
     }
 
     .user-handle-info .sub-cta {
-      font-size: 7.5px;
+      font-size: 7px;
       color: #8a9bb0;
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
 
     @media (max-width: 900px) {
+      html, body { overflow-y: auto; position: static; height: auto; }
       .main-wrapper {
         width: 100%;
         grid-template-columns: 1fr;
         column-gap: 0;
         row-gap: 15px;
+        padding: 60px 15px 20px 15px;
       }
       .control-panel { contain: none; overflow-y: visible; }
     }
@@ -511,6 +520,7 @@
 
 <!-- Lapisan background halaman -->
 <div id="bgLayer"></div>
+<div class="bg-overlay"></div>
 
 <div class="main-wrapper">
 
@@ -522,7 +532,7 @@
       <div class="form-group full-width">
         <label>1. Upload File ZIP Letterboxd</label>
         <input type="file" id="zipFile" accept=".zip" onchange="handleZipUpload(event)">
-        <div class="zip-hint">Cara mendapatkan: Letterboxd → Settings → Data → Export Your Data. File diproses di browser Anda dan tidak diunggah ke mana pun.</div>
+        <div class="zip-hint">Cara mendapatkan: Letterboxd → Settings → Data → Export Your Data. File diproses di browser Anda.</div>
         <div class="zip-status" id="zipStatus"></div>
       </div>
 
@@ -555,14 +565,14 @@
       </div>
 
       <div class="form-group full-width">
-        <label>2. Paste Massal Link Poster (Berurutan dari awal sampai akhir bulan, 1 link per baris)</label>
-        <textarea id="bulkPosterInput" placeholder="https://image.tmdb.org/t/p/original/...&#10;https://image.tmdb.org/t/p/original/..."></textarea>
+        <label>2. Paste Massal Link Poster (1 link per baris)</label>
+        <textarea id="bulkPosterInput" placeholder="https://image.tmdb.org/t/p/original/..."></textarea>
       </div>
     </div>
 
     <div class="btn-group">
-      <button id="btnApply" onclick="applyPosters()"><i class="fa-solid fa-wand-magic-sparkles"></i> Terapkan Poster</button>
-      <button class="btn-export" onclick="exportPNG()"><i class="fa-solid fa-download"></i> Export PNG (HD Quality)</button>
+      <button id="btnApply" onclick="applyPosters()"><i class="fa-solid fa-wand-magic-sparkles"></i> Terapkan</button>
+      <button class="btn-export" onclick="exportPNG()"><i class="fa-solid fa-download"></i> Export PNG (HD)</button>
     </div>
   </div>
 
@@ -668,7 +678,7 @@
     const grid = document.getElementById("calendarGrid");
     const w = grid.clientWidth;
     if (!w) return;
-    const cw = (w - 6 * 5) / 7;
+    const cw = (w - 6 * 4) / 7; 
     document.getElementById("calendarBlock").style.setProperty('--cw', cw + 'px');
   }
 
@@ -757,7 +767,7 @@
 
       const diary = await readCSV(/(^|\/)diary\.csv$/i);
       if (!diary) {
-        setZipStatus('Error: diary.csv tidak ditemukan di dalam ZIP. Pastikan ini file ekspor data Letterboxd.');
+        setZipStatus('Error: diary.csv tidak ditemukan.');
         return;
       }
 
@@ -771,9 +781,9 @@
       }
 
       processDiaryRows(diary);
-      setZipStatus(`Berhasil membaca diary.csv: ${rawCSVRows.length} entri bertanggal.`);
+      setZipStatus(`Berhasil: ${rawCSVRows.length} entri.`);
     } catch (err) {
-      setZipStatus('Gagal membaca file ZIP: ' + err.message);
+      setZipStatus('Gagal membaca ZIP: ' + err.message);
     }
   }
 
@@ -787,9 +797,8 @@
 
   async function fetchImageAsBase64(url, maxW) {
     const cleanUrl = url.trim().replace(/^"|"$/g, '');
-    const w = maxW || POSTER_FETCH_W;
     const proxyList = [
-      u => `https://images.weserv.nl/?url=${encodeURIComponent(u)}&w=${w}&we&q=92`,
+      u => `https://images.weserv.nl/?url=${encodeURIComponent(u)}&w=${maxW}&we&q=92`,
       u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
     ];
 
@@ -895,13 +904,13 @@
     const { month, year } = getSelectedMonthYear();
 
     if (currentMonthData.length === 0) {
-      alert(`Perhatian: Tidak ada catatan film/log yang ditemukan pada ${monthNames[month]} ${year}! Pastikan file ZIP sudah diimpor dan tahun/bulan sudah sesuai.`);
+      alert(`Perhatian: Tidak ada catatan film pada ${monthNames[month]} ${year}!`);
       return;
     }
 
     const btn = document.getElementById('btnApply');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memuat Poster...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memuat...';
     btn.disabled = true;
 
     renderCalendar();
@@ -975,7 +984,7 @@
     const { month, year } = getSelectedMonthYear();
 
     if (currentMonthData.length === 0) {
-      alert(`Tidak dapat mengekspor: Tidak ada catatan film/log pada ${monthNames[month]} ${year}!`);
+      alert(`Tidak ada data untuk diekspor pada ${monthNames[month]} ${year}!`);
       return;
     }
 
@@ -997,7 +1006,7 @@
       link.href = canvas.toDataURL("image/png");
       link.click();
     }).catch(err => {
-      alert("Gagal melakukan export gambar: " + err.message);
+      alert("Gagal export gambar: " + err.message);
     });
   }
 
