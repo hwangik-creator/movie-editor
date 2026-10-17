@@ -44,9 +44,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusClass = item.active ? "" : "disabled";
     const badgeText = item.active ? "Active" : "Soon";
     const targetUrl = item.active ? item.url : "#";
+    
+    // Karena mengarah ke Google Sites eksternal, tambahkan target="_blank"
+    const isExternal = targetUrl.startsWith("http");
+    const targetAttr = isExternal ? 'target="_blank" rel="noopener noreferrer"' : '';
 
     return `
-      <a href="${targetUrl}" class="menu-card ${statusClass}">
+      <a href="${targetUrl}" class="menu-card ${statusClass}" ${targetAttr}>
         <div class="card-badge">${badgeText}</div>
         <div class="card-icon">
           <i class="fa-solid ${item.icon}"></i>
