@@ -33,11 +33,12 @@ const menuList = [
   }
 ];
 
-// Script otomatis untuk merender tombol dengan efek transisi klik halus
+// Script otomatis untuk merender tombol ke halaman Home
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("menuGrid");
   if (!grid) return;
 
+  // Render HTML tombol ke dalam grid
   grid.innerHTML = menuList.map(item => {
     const statusClass = item.active ? "" : "disabled";
     const badgeText = item.active ? "Active" : "Soon";
@@ -55,20 +56,21 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }).join("");
 
-  // Efek transisi halus (fade out) saat tombol diklik
-  document.querySelectorAll('a[data-smooth-link]').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault(); // Tahan sebentar pindahnya
-      const destination = this.href;
+  // Menggunakan Event Delegation agar klik pada tombol aktif langsung memicu transisi halus
+  grid.addEventListener("click", function(e) {
+    const link = e.target.closest('a[data-smooth-link]');
+    if (!link) return;
 
-      // Buat efek layar perlahan menggelap secara halus (fade out)
-      document.body.style.transition = "opacity 0.3s ease";
-      document.body.style.opacity = "0";
+    e.preventDefault(); // Tahan sebentar pemuatan halaman
+    const destination = link.href;
 
-      // Pindah halaman setelah animasi selesai (300 milidetik)
-      setTimeout(() => {
-        window.location.href = destination;
-      }, 300);
-    });
+    // Pastikan transisi opacity aktif di body
+    document.body.style.transition = "opacity 0.35s ease";
+    document.body.style.opacity = "0";
+
+    // Pindah ke halaman tujuan setelah animasi selesai
+    setTimeout(() => {
+      window.location.href = destination;
+    }, 350);
   });
 });
