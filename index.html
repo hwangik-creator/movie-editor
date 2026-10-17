@@ -16,7 +16,6 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Kunci layar penuh agar tidak ada scrollbar sama sekali */
     html, body {
       width: 100vw;
       height: 100vh;
@@ -27,11 +26,22 @@
       position: fixed;
       top: 0;
       left: 0;
-      opacity: 1;
-      transition: opacity 0.3s ease-in-out;
     }
 
-    /* Background ImgBB dengan penempatan fixed supaya stabil tidak kedip */
+    /* Lapisan Transisi Overlay */
+    .page-transition-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: #06080d;
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.35s ease-in-out;
+    }
+    body.loaded .page-transition-overlay {
+      opacity: 0;
+    }
+
     .bg-layer {
       position: fixed;
       top: 0;
@@ -241,12 +251,15 @@
 </head>
 <body>
 
+  <!-- Lapisan Transisi Overlay -->
+  <div class="page-transition-overlay" id="pageOverlay"></div>
+
   <div class="desktop-notice" id="desktopNotice" role="alert">
     <div class="dn-card">
       <div class="dn-icon"><i class="fa-solid fa-desktop"></i></div>
       <div class="dn-badge">Desktop</div>
       <div class="dn-title">Hanya Tersedia di Desktop</div>
-      <p class="dn-text">Hanya dapat diakses melalui komputer atau laptop (desktop). Silakan buka kembali halaman ini menggunakan perangkat desktop.</p> 
+      <p class="dn-text">Hanya dapat diakses melalui komputer atau laptop (desktop).</p> 
     </div>
   </div>
 
@@ -268,9 +281,14 @@
     </div>
   </div>
 
-  <script src="menu-config.js?v=8"></script>
+  <script src="menu-config.js?v=9"></script>
 
   <script>
+    // Efek Fade-In saat halaman mulai terbuka
+    window.addEventListener("DOMContentLoaded", () => {
+      document.body.classList.add("loaded");
+    });
+
     function isUnsupportedDevice() {
       const ua = navigator.userAgent || '';
       const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
