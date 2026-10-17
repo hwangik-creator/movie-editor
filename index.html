@@ -9,6 +9,8 @@
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PapaParse Library untuk membaca CSV Spreadsheet -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
@@ -32,18 +34,23 @@
       left: 0;
     }
 
-    /* Layer Background Langsung Menggunakan Gambar ImgBB */
+    /* Layer Background Dinamis dengan Efek Faded/Fade-In yang Mulus */
     .bg-layer {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-image: url('https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg');
+      background-image: url('https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg'); /* Fallback awal */
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       z-index: -1;
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+    }
+
+    .bg-layer.loaded {
       opacity: 1;
     }
 
@@ -338,8 +345,8 @@
 
       const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|Opera Mini|IEMobile|BlackBerry|webOS/i.test(ua);
       const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
-      const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          // iPhone/iPad dengan "Request Desktop Website"
-      const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    // layar sentuh tanpa mouse/trackpad
+      const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          
+      const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    
       const coarsePrimary = mq('(pointer: coarse)') || mq('(hover: none)');
       const smallScreen = screen.width > 0 && Math.min(screen.width, screen.height) < 480;
 
@@ -353,6 +360,40 @@
     }
 
     applyDeviceGate();
+
+    /* ================================================================
+       LOAD BACKGROUND DARI SPREADSHEET (DENGAN FALLBACK IMGBB)
+       ================================================================ */
+    const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(BG_SHEET_CSV_URL, {
+      download: true,
+      header: false,
+      skipEmptyLines: true,
+      complete: function(results) {
+        let bgUrl = "https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg"; // Default ImgBB
+        if (results.data && results.data.length > 0 && results.data[0].length > 0) {
+          const sheetUrl = results.data[0][0].trim();
+          if (sheetUrl && sheetUrl.startsWith("http")) {
+            bgUrl = sheetUrl;
+          }
+        }
+        
+        const bgLayer = document.getElementById("bgLayer");
+        bgLayer.style.backgroundImage = `url('${bgUrl}')`;
+        setTimeout(() => {
+          bgLayer.classList.add("loaded");
+        }, 100);
+      },
+      error: function() {
+        // Fallback jika spreadsheet gagal dibaca
+        const bgLayer = document.getElementById("bgLayer");
+        bgLayer.style.backgroundImage = `url('https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg')`;
+        setTimeout(() => {
+          bgLayer.classList.add("loaded");
+        }, 100);
+      }
+    });
   </script>
 
 </body>
