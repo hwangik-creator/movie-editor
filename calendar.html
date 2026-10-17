@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monthly Movie Calendar - Dark Letterboxd</title>
+  <title>Monthly Movie Calendar - Hwang's Tools</title>
+  <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=wd93opJhF4VC&format=png&color=FFFFFF">
+  
   <!-- JSZip untuk membaca file ZIP Letterboxd -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- Library PapaParse untuk parsing CSV -->
@@ -21,20 +23,13 @@
       --text-main: #ffffff;
       --text-muted: #9ab;
       --letterboxd-green: #00e054;
-      /* Lebar maksimal seluruh layout. Kecilkan (mis. 860px) kalau ingin semuanya lebih pendek. */
       --max-w: 1000px;
-      /* Gelap tipis di atas foto background (0 = foto asli, 1 = hitam penuh) */
       --bg-dim: 0.35;
 
-      /* EFEK KACA DI LAYAR (tidak ikut ke PNG).
-         --panel-bg: kepekatan panel (angka terakhir 0 = bening, 1 = solid).
-         --panel-blur: kekaburan foto di belakang panel. */
       --panel-bg: rgba(20, 24, 28, 0.72);
       --panel-blur: 12px;
-      /* Warna slot poster di layar; di PNG otomatis jadi solid */
       --cell-bg: rgba(30, 38, 44, 0.65);
 
-      /* Ukuran angka dan bintang rating (turunkan untuk lebih kecil, mis. 0.08) */
       --rating-size: 0.10;
     }
 
@@ -45,6 +40,8 @@
       background-color: #06080d;
       color: var(--text-main);
       font-family: 'Inter', sans-serif;
+      opacity: 1;
+      transition: opacity 0.3s ease-in-out;
     }
 
     body {
@@ -54,20 +51,48 @@
       position: relative;
     }
 
-    /* LATAR BELAKANG HALAMAN (foto dari link di Google Sheet).
-       Berada di belakang semuanya dan tidak ikut ter-export ke PNG. */
+    /* LATAR BELAKANG HALAMAN (Langsung Link ImgBB) */
     #bgLayer {
       position: fixed;
       inset: 0;
       z-index: 0;
+      background-image: linear-gradient(rgba(6,8,13,var(--bg-dim)), rgba(6,8,13,var(--bg-dim))), url("https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg");
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      opacity: 0;
-      transition: opacity 0.6s ease;
+      opacity: 1;
       pointer-events: none;
     }
-    #bgLayer.loaded { opacity: 1; }
+
+    /* TOMBOL KEMBALI KE HOME */
+    .btn-back-home {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(20, 24, 28, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .btn-back-home:hover {
+      background: rgba(25, 30, 36, 0.95);
+      border-color: var(--letterboxd-green);
+      color: var(--letterboxd-green);
+      transform: translateX(-3px);
+    }
 
     /* ===== PESAN "HANYA DESKTOP" ===== */
     .desktop-notice {
@@ -110,33 +135,28 @@
     }
     .dn-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
     .dn-text { font-size: 13px; line-height: 1.6; color: #c0d0e0; }
-    .dn-note { font-size: 11.5px; line-height: 1.5; color: #8a9bb0; margin-top: 10px; }
-    .dn-thanks { font-size: 12px; font-weight: 700; color: var(--letterboxd-green); margin-top: 12px; }
 
-    html.mobile-blocked .main-wrapper { display: none !important; }
+    html.mobile-blocked .main-wrapper, html.mobile-blocked .btn-back-home { display: none !important; }
     html.mobile-blocked .desktop-notice { display: flex; }
 
-    /* Cadangan lewat CSS murni (kalau JavaScript tidak berjalan): perangkat dengan input sentuh */
     @media (hover: none), (pointer: coarse) {
-      .main-wrapper { display: none !important; }
+      .main-wrapper, .btn-back-home { display: none !important; }
       .desktop-notice { display: flex; }
     }
 
-    /* Blok utama: panel kiri + kalender kanan, tinggi mengikuti kalender, selalu di tengah */
+    /* Layout Utama */
     .main-wrapper {
       position: relative;
       z-index: 1;
       width: min(96vw, var(--max-w));
       margin: auto;
+      margin-top: 50px;
       display: grid;
       grid-template-columns: 30.9% 63.3%;
       column-gap: 5.8%;
       align-items: stretch;
     }
 
-    /* Panel Kontrol Kiri: kaca transparan, tinggi otomatis sama dengan kotak kalender.
-       contain: size membuat isi panel tidak ikut menentukan tinggi baris;
-       kalau isinya lebih panjang dari kotak kalender, panel bisa di-scroll. */
     .control-panel {
       contain: size;
       background: var(--panel-bg);
@@ -256,7 +276,6 @@
     button:disabled { opacity: 0.6; cursor: wait; }
     .btn-export { background-color: #ff8000; color: #ffffff; flex: 1; }
 
-    /* AREA KANVAS KALENDER (kotak kanan): kaca di layar, tinggi mengikuti isi */
     #captureArea {
       background-color: var(--panel-bg);
       -webkit-backdrop-filter: blur(var(--panel-blur));
@@ -271,8 +290,6 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* VERSI EXPORT: kelas ini hanya dipasang pada salinan yang difoto html2canvas,
-       jadi tampilan di layar tidak berubah. Hasilnya solid seperti Letterboxd. */
     #captureArea.exporting {
       background-color: var(--bg-color);
       -webkit-backdrop-filter: none;
@@ -301,8 +318,6 @@
       margin-top: 2px;
     }
 
-    /* --cw = lebar satu kolom (px), diisi otomatis oleh JS.
-       Ukuran rating dihitung dari --cw supaya selalu sebanding dengan ukuran poster. */
     .calendar-block { --cw: 70px; }
 
     .weekdays-grid {
@@ -324,7 +339,6 @@
       gap: 6px 5px;
     }
 
-    /* Satu slot = angka tanggal (di atas) + frame poster 2:3 (di bawah) */
     .day-slot {
       display: flex;
       flex-direction: column;
@@ -358,7 +372,7 @@
     }
 
     .poster-container {
-      --k: 1; /* faktor skala rating: 1 = poster penuh, 0.5 = poster setengah lebar */
+      --k: 1;
       width: 100%;
       height: 100%;
       position: relative;
@@ -380,19 +394,15 @@
       overflow: visible;
     }
 
-    /* 2 film: diagonal */
     .poster-container.count-2 .movie-item-wrapper:nth-child(1) { grid-column: 1; grid-row: 1; }
     .poster-container.count-2 .movie-item-wrapper:nth-child(2) { grid-column: 2; grid-row: 2; }
 
-    /* 3 film: yang ketiga di tengah bawah */
     .poster-container.count-3 .movie-item-wrapper:nth-child(3) {
       grid-column: span 2;
       width: 50%;
       justify-self: center;
     }
 
-    /* Kotak poster: gambar di dalamnya dipotong dari tengah (cover) lewat JavaScript,
-       jadi proporsi asli gambar terjaga dan tidak melar, baik di layar maupun di PNG. */
     .movie-item-wrapper {
       position: relative;
       width: 100%;
@@ -407,7 +417,6 @@
       user-select: none;
     }
 
-    /* Rating: semua ukuran dihitung dari lebar kolom (--cw), --rating-size, dan faktor skala (--k) */
     .rating-badge {
       position: absolute;
       bottom: calc(var(--cw) * var(--rating-size) * 0.25 * var(--k));
@@ -422,7 +431,6 @@
       border-radius: calc(var(--cw) * var(--rating-size) * 0.25 * var(--k));
     }
 
-    /* FOOTER (sama dengan poster-reviewer, collage, dan wrapped): logo di kiri, link akun di kanan */
     .user-profile-card {
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 7px;
@@ -470,7 +478,6 @@
       letter-spacing: 0.8px;
     }
 
-    /* Jendela desktop yang sempit: panel ditumpuk ke bawah */
     @media (max-width: 900px) {
       .main-wrapper {
         width: 100%;
@@ -483,6 +490,11 @@
   </style>
 </head>
 <body>
+
+<!-- TOMBOL KEMBALI KE HOME -->
+<a href="index.html" class="btn-back-home" id="btnBack">
+  <i class="fa-solid fa-arrow-left"></i> Home
+</a>
 
 <!-- PESAN: HANYA DAPAT DIAKSES VIA DESKTOP -->
 <div class="desktop-notice" id="desktopNotice" role="alert">
@@ -497,7 +509,7 @@
   </div>
 </div>
 
-<!-- Lapisan background halaman (diisi otomatis dari Google Sheet) -->
+<!-- Lapisan background halaman -->
 <div id="bgLayer"></div>
 
 <div class="main-wrapper">
@@ -595,13 +607,17 @@
 </div>
 
 <script>
-  /* ================================================================
-     KUNCI DESKTOP
-     Halaman ini hanya untuk desktop. Pengecekan TIDAK bergantung pada lebar halaman,
-     jadi mode "Situs desktop" di peramban ponsel tidak membantu. Yang diperiksa:
-     jenis peramban, perangkat sentuh tanpa mouse/trackpad, input utama sentuhan,
-     iPhone/iPad yang menyamar sebagai Mac, dan ukuran layar fisik.
-     ================================================================ */
+  // Script Transisi Halus saat klik "Home"
+  document.getElementById("btnBack").addEventListener("click", function(e) {
+    e.preventDefault();
+    const destination = this.href;
+    document.body.style.transition = "opacity 0.3s ease";
+    document.body.style.opacity = "0";
+    setTimeout(() => {
+      window.location.href = destination;
+    }, 300);
+  });
+
   function isUnsupportedDevice() {
     const ua = navigator.userAgent || '';
     const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
@@ -609,8 +625,8 @@
 
     const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|Opera Mini|IEMobile|BlackBerry|webOS/i.test(ua);
     const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
-    const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          // iPhone/iPad dengan "Request Desktop Website"
-    const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    // layar sentuh tanpa mouse/trackpad
+    const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          
+    const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    
     const coarsePrimary = mq('(pointer: coarse)') || mq('(hover: none)');
     const smallScreen = screen.width > 0 && Math.min(screen.width, screen.height) < 480;
 
@@ -625,21 +641,8 @@
 
   applyDeviceGate();
 
-  /* ================================================================
-     PENGATURAN BACKGROUND
-     Link CSV dari Google Sheet yang sudah "Dipublikasikan ke web".
-     Sel yang berisi link gambar (https://...) dipakai sebagai background.
-     Ganti isi sel di Sheet untuk mengganti background tanpa menyentuh kode ini.
-     ================================================================ */
-  const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
-
-  /* ================================================================
-     PENGATURAN EXPORT & KUALITAS GAMBAR
-     EXPORT_SCALE = skala export PNG. Poster diperkecil ke sekitar 2x ukuran yang
-     dibutuhkan di PNG supaya pengecilan terakhir halus dan kualitas tetap bening.
-     ================================================================ */
   const EXPORT_SCALE = 4;
-  const POSTER_FETCH_W = 800; // lebar maksimal poster yang diunduh dari proxy
+  const POSTER_FETCH_W = 800;
 
   let rawCSVRows = [];
   let currentMonthData = [];
@@ -649,42 +652,6 @@
     "Juli", "Agustus", "September", "Oktober", "November", "Desember"
   ];
 
-  /* ---------- Background dari Google Sheet ---------- */
-  async function loadBackgroundFromSheet() {
-    if (!BG_SHEET_CSV_URL) return;
-
-    try {
-      // Tambah parameter waktu supaya tidak terkena cache browser
-      const sep = BG_SHEET_CSV_URL.includes('?') ? '&' : '?';
-      const res = await fetch(BG_SHEET_CSV_URL + sep + 't=' + Date.now());
-      if (!res.ok) throw new Error("Sheet tidak bisa dibaca: " + res.status);
-      const text = await res.text();
-
-      // Ambil sel pertama yang berisi link http(s)
-      const parsed = Papa.parse(text, { header: false, skipEmptyLines: true });
-      const cells = [].concat(...parsed.data).map(c => String(c).trim());
-      const url = cells.find(c => /^https?:\/\//i.test(c));
-      if (!url) {
-        console.warn("Tidak ada link gambar (https://...) di Sheet.");
-        return;
-      }
-
-      // Pastikan gambar benar-benar bisa dimuat sebelum dipasang
-      const img = new Image();
-      img.onload = () => {
-        const layer = document.getElementById('bgLayer');
-        const safeUrl = url.replace(/"/g, '%22');
-        layer.style.backgroundImage =
-          `linear-gradient(rgba(6,8,13,var(--bg-dim)), rgba(6,8,13,var(--bg-dim))), url("${safeUrl}")`;
-        layer.classList.add('loaded');
-      };
-      img.onerror = () => console.warn("Gambar background tidak bisa dimuat:", url);
-      img.src = url;
-    } catch (err) {
-      console.warn("Background dilewati:", err);
-    }
-  }
-
   function getSelectedMonthYear() {
     return {
       month: parseInt(document.getElementById("selectMonth").value),
@@ -692,18 +659,16 @@
     };
   }
 
-  // Link akun di footer (Letterboxd)
   function updateHandle() {
     const val = document.getElementById('inputLetterboxdLink').value.trim() || 'letterboxd.com/hwangik';
     document.querySelectorAll('.js-handle').forEach(el => { el.innerText = val; });
   }
 
-  // Hitung lebar satu kolom (px) agar ukuran rating selalu sebanding dengan poster
   function updateCellSize() {
     const grid = document.getElementById("calendarGrid");
     const w = grid.clientWidth;
     if (!w) return;
-    const cw = (w - 6 * 5) / 7; // 6 celah x 5px
+    const cw = (w - 6 * 5) / 7;
     document.getElementById("calendarBlock").style.setProperty('--cw', cw + 'px');
   }
 
@@ -722,15 +687,13 @@
     grid.innerHTML = "";
 
     let firstDayIndex = new Date(year, month, 1).getDay();
-    let startingDay = (firstDayIndex === 0) ? 6 : firstDayIndex - 1; // Mulai Senin
+    let startingDay = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
     let totalDays = new Date(year, month + 1, 0).getDate();
 
-    // Slot kosong awal bulan
     for (let i = 0; i < startingDay; i++) {
       grid.appendChild(document.createElement("div"));
     }
 
-    // Tanggal 1 sampai akhir bulan: angka di atas, frame poster di bawah
     for (let day = 1; day <= totalDays; day++) {
       let slot = document.createElement("div");
       slot.className = "day-slot";
@@ -746,12 +709,10 @@
     updateCellSize();
   }
 
-  /* ---------- Impor langsung file ZIP Letterboxd ---------- */
   function setZipStatus(msg) {
     document.getElementById('zipStatus').innerText = msg;
   }
 
-  // Mengolah baris diary.csv menjadi daftar tontonan (tahun, bulan, tanggal, rating)
   function processDiaryRows(rows) {
     rawCSVRows = [];
     rows.forEach(row => {
@@ -794,14 +755,12 @@
         return Papa.parse(text, { header: true, skipEmptyLines: true }).data;
       };
 
-      // diary.csv dipilih otomatis dari dalam ZIP
       const diary = await readCSV(/(^|\/)diary\.csv$/i);
       if (!diary) {
         setZipStatus('Error: diary.csv tidak ditemukan di dalam ZIP. Pastikan ini file ekspor data Letterboxd.');
         return;
       }
 
-      // Nama pengguna untuk footer (opsional, kalau profile.csv ada di dalam ZIP)
       const profile = await readCSV(/(^|\/)profile\.csv$/i);
       if (profile && profile[0]) {
         const username = (profile[0]['Username'] || '').trim();
@@ -826,14 +785,10 @@
     renderCalendar();
   }
 
-  /* ================================================================
-     GAMBAR POSTER
-     ================================================================ */
   async function fetchImageAsBase64(url, maxW) {
     const cleanUrl = url.trim().replace(/^"|"$/g, '');
     const w = maxW || POSTER_FETCH_W;
     const proxyList = [
-      // w = lebar maksimal, we = tanpa memperbesar, q = kualitas JPEG
       u => `https://images.weserv.nl/?url=${encodeURIComponent(u)}&w=${w}&we&q=92`,
       u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
     ];
@@ -867,8 +822,6 @@
     });
   }
 
-  /* Mengecilkan gambar bertahap (setengah demi setengah) dengan kualitas tinggi,
-     hanya kalau gambar jauh lebih besar dari yang dibutuhkan. Hasilnya halus, tidak bergerigi. */
   async function downscaleDataUrl(src, targetW) {
     if (!String(src).startsWith('data:')) return src;
     try {
@@ -908,11 +861,6 @@
     return d;
   }
 
-  /* Memasang poster ke dalam kotak dengan cara "cover":
-     - gambar diperbesar secukupnya sampai menutupi seluruh kotak, lalu dipotong dari tengah
-     - gambar yang kecil di-zoom (diperbesar), bukan ditarik
-     - proporsi asli gambar selalu terjaga, sehingga tidak melar di layar maupun di PNG
-     Rasio kotak diukur langsung dari tampilan (1 film, 2, 3, atau 4 film per hari). */
   async function placeCoverImage(wrapper, src) {
     const bw = wrapper.offsetWidth;
     const bh = wrapper.offsetHeight;
@@ -928,8 +876,8 @@
       img.onload = () => {
         const ri = img.naturalWidth / img.naturalHeight;
         let pw = 100, ph = 100;
-        if (ri > ratio) pw = (ri / ratio) * 100;  // gambar lebih lebar dari kotak: potong kiri-kanan
-        else ph = (ratio / ri) * 100;             // gambar lebih tinggi dari kotak: potong atas-bawah
+        if (ri > ratio) pw = (ri / ratio) * 100;
+        else ph = (ratio / ri) * 100;
         img.style.cssText =
           `position:absolute; width:${pw}%; height:${ph}%; left:${(100 - pw) / 2}%; top:${(100 - ph) / 2}%;`;
         wrapper.insertBefore(img, wrapper.firstChild);
@@ -991,7 +939,7 @@
       let box = document.getElementById(`poster-box-${day}`);
       if (!box || !cell) continue;
 
-      const shown = groupedByDay[day].slice(0, 4); // maksimal 4 film per hari
+      const shown = groupedByDay[day].slice(0, 4);
       const n = shown.length;
 
       if (n > 1) {
@@ -1017,7 +965,6 @@
       });
     }
 
-    // Tunggu semua poster selesai terpasang sebelum tombol aktif lagi
     await Promise.all(placing);
 
     btn.innerHTML = originalText;
@@ -1040,7 +987,6 @@
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#14181c",
-      // Versi solid hanya dipasang pada salinan yang difoto, layar tidak berubah
       onclone: (clonedDoc) => {
         const el = clonedDoc.getElementById("captureArea");
         if (el) el.classList.add("exporting");
@@ -1056,12 +1002,10 @@
   }
 
   window.onload = () => {
-    // Perangkat non-desktop: berhenti di sini, hanya pesan "Hanya Tersedia di Desktop" yang tampil
     if (applyDeviceGate()) return;
 
     updateHandle();
     renderCalendar();
-    loadBackgroundFromSheet();
     window.addEventListener('resize', updateCellSize);
     if (window.ResizeObserver) {
       new ResizeObserver(updateCellSize).observe(document.getElementById("calendarGrid"));
