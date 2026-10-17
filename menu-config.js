@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return `
       <a href="${targetUrl}" class="menu-card ${statusClass}" ${targetAttr} ${!isExternal && item.active ? 'data-smooth-link' : ''}>
-        <div class="card-badge">${badgeTest}</div>
+        <div class="card-badge">${badgeText}</div>
         <div class="card-icon">
           <i class="fa-solid ${item.icon}"></i>
         </div>
