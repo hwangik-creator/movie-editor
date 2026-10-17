@@ -8,7 +8,6 @@
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
@@ -31,24 +30,23 @@
       top: 0;
       left: 0;
       opacity: 1;
-      transition: opacity 0.35s ease-in-out; /* Transisi halus untuk fade-in/fade-out body */
+      transition: opacity 0.3s ease-in-out;
     }
 
+    /* Direct Background Image dari ImgBB */
     .bg-layer {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      background-image: url('https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       z-index: -1;
-      opacity: 0;
-      transition: opacity 1.2s ease-in-out;
+      opacity: 1;
     }
-
-    .bg-layer.loaded { opacity: 1; }
 
     .bg-overlay {
       position: absolute;
@@ -115,7 +113,6 @@
       .menu-grid { grid-template-columns: 1fr; max-width: 380px; }
     }
 
-    /* Style Dasar Card */
     .menu-card {
       background: rgba(20, 24, 28, 0.78);
       backdrop-filter: blur(12px);
@@ -176,11 +173,10 @@
       color: var(--letterboxd-green);
     }
 
-    /* ===== STYLE KHUSUS TOMBOL MATI / INACTIVE (Otomatis) ===== */
     .menu-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
-      pointer-events: none; /* Mematikan fungsi klik total */
+      pointer-events: none;
     }
     .menu-card.disabled:hover {
       transform: none;
@@ -204,7 +200,6 @@
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
 
-    /* Kunci Desktop */
     .desktop-notice {
       display: none;
       position: fixed;
@@ -267,7 +262,6 @@
       <h1 class="home-title">Hwang's <span>Tools</span></h1>
       <p class="home-subtitle">Dibuat dan digunakan untuk keperluan pribadi.</p>
 
-      <!-- Grid Menu yang akan diisi otomatis lewat JavaScript -->
       <div class="menu-grid" id="menuGrid"></div>
     </div>
 
@@ -276,8 +270,7 @@
     </div>
   </div>
 
-  <!-- Panggil File Konfigurasi Menu di Sini -->
-  <script src="menu-config.js"></script>
+  <script src="menu-config.js?v=3"></script>
 
   <script>
     function isUnsupportedDevice() {
@@ -300,25 +293,6 @@
     }
 
     applyDeviceGate();
-
-    // Load Background dari Spreadsheet
-    const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
-
-    Papa.parse(BG_SHEET_CSV_URL, {
-      download: true,
-      header: false,
-      skipEmptyLines: true,
-      complete: function(results) {
-        if (results.data && results.data.length > 0 && results.data[0].length > 0) {
-          const bgUrl = results.data[0][0].trim();
-          if (bgUrl && bgUrl.startsWith("http")) {
-            const bgLayer = document.getElementById("bgLayer");
-            bgLayer.style.backgroundImage = `url('${bgUrl}')`;
-            setTimeout(() => { bgLayer.classList.add("loaded"); }, 100);
-          }
-        }
-      }
-    });
   </script>
 
 </body>
