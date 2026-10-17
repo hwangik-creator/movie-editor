@@ -29,11 +29,12 @@
       color: #ffffff;
       opacity: 1;
       transition: opacity 0.3s ease-in-out;
+      overflow: hidden; /* Mencegah halaman utama ikut terscroll */
     }
 
     body {
-      min-height: 100vh;
-      padding: 12px;
+      height: 100vh;
+      padding: 10px;
       display: flex;
       position: relative;
     }
@@ -54,8 +55,8 @@
     /* TOMBOL KEMBALI KE HOME */
     .btn-back-home {
       position: fixed;
-      top: 20px;
-      left: 20px;
+      top: 15px;
+      left: 15px;
       z-index: 100;
       display: inline-flex;
       align-items: center;
@@ -65,9 +66,9 @@
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      padding: 10px 16px;
+      padding: 8px 14px;
       border-radius: 30px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.3s ease;
@@ -131,12 +132,13 @@
       .desktop-notice { display: flex; }
     }
 
+    /* REVISI UKURAN: Disesuaikan agar pas satu layar penuh tanpa scroll */
     .main-layout {
       position: relative;
       z-index: 1;
-      width: min(100%, var(--max-w), calc((100vh - 24px) / 0.633));
+      width: min(100%, var(--max-w), calc((100vh - 20px) / 0.68));
       margin: auto;
-      margin-top: 50px;
+      margin-top: 10px;
       display: grid;
       grid-template-columns: 30.9% 63.3%;
       column-gap: 5.8%;
@@ -152,7 +154,7 @@
       backdrop-filter: blur(var(--panel-blur));
       border: 1px solid rgba(255, 255, 255, 0.10);
       border-radius: 12px;
-      padding: 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
@@ -160,10 +162,10 @@
     }
 
     .panel-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: #00e054;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -172,30 +174,30 @@
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 6px;
+      margin-bottom: 6px;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .form-group { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
     .form-group.full-width { grid-column: span 2; }
-    .form-group label { font-size: 10px; color: #00e054; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group label { font-size: 9.5px; color: #00e054; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     input[type="text"], textarea {
-      background: #0f1115; border: 1px solid #2c3440; color: #fff; padding: 7px; border-radius: 6px; font-size: 11px; outline: none;
+      background: #0f1115; border: 1px solid #2c3440; color: #fff; padding: 6px; border-radius: 6px; font-size: 10.5px; outline: none;
     }
     input[type="text"]:focus, textarea:focus { border-color: #00e054; }
 
-    textarea { resize: vertical; font-family: monospace; font-size: 10.5px; line-height: 1.35; height: 95px; }
+    textarea { resize: vertical; font-family: monospace; font-size: 10px; line-height: 1.3; height: 80px; }
 
     .rating-input {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       background: rgba(15, 17, 21, 0.7);
       border: 1px solid rgba(44, 52, 64, 0.8);
       border-radius: 8px;
-      padding: 8px 10px;
+      padding: 6px 8px;
     }
 
     .stars-picker {
@@ -208,8 +210,8 @@
 
     .star {
       position: relative;
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       cursor: pointer;
     }
     .star svg {
@@ -236,18 +238,18 @@
     .like-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       background: #0f1115;
       border: 1px solid #2c3440;
       color: #8a9bb0;
-      padding: 6px 11px;
+      padding: 5px 9px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s, border-color 0.2s, color 0.2s;
     }
-    .like-btn i { font-size: 13px; transition: color 0.2s; }
+    .like-btn i { font-size: 12px; transition: color 0.2s; }
     .like-btn:hover { border-color: #ff8000; }
     .like-btn.active {
       background: rgba(255, 128, 0, 0.12);
@@ -263,13 +265,13 @@
 
     .rating-input-score {
       margin-left: auto;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       color: #ffffff;
     }
 
-    .btn-group { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
-    .btn { padding: 8px 12px; border: none; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-group { display: flex; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+    .btn { padding: 7px 10px; border: none; border-radius: 6px; font-weight: 700; font-size: 10.5px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
     .btn:disabled { opacity: 0.6; cursor: wait; }
     .btn-active { background: #00e054; color: #14181c; }
     .btn-inactive { background: #2c3440; color: #ffffff; }
@@ -277,7 +279,7 @@
     .btn-process:hover { background: #00b342; }
     .btn-export { background: #ff8000; color: #ffffff; flex: 1; }
     .btn-export:hover { background: #e07000; }
-    .btn-all { background: #3b82f6; color: #ffffff; width: 100%; margin-top: 5px; }
+    .btn-all { background: #3b82f6; color: #ffffff; width: 100%; margin-top: 4px; }
 
     .stage-panel {
       position: relative;
@@ -297,7 +299,7 @@
 
     .stage-inner {
       position: absolute;
-      inset: 14px;
+      inset: 12px;
       overflow: hidden;
     }
 
@@ -602,7 +604,7 @@
   <div class="control-panel">
     <div class="panel-title"><i class="fa-solid fa-square-poll-vertical"></i> Review Generator (1:1 • 1080×1080)</div>
 
-    <div class="btn-group" style="margin-bottom: 10px;">
+    <div class="btn-group" style="margin-bottom: 8px;">
       <button class="btn btn-active" id="btnTab1" onclick="switchPreview(1)"><i class="fa-solid fa-id-card"></i> Foto 1</button>
       <button class="btn btn-inactive" id="btnTab2" onclick="switchPreview(2)"><i class="fa-solid fa-images"></i> Foto 2</button>
       <button class="btn btn-inactive" id="btnTab3" onclick="switchPreview(3)"><i class="fa-solid fa-table-cells-large"></i> Foto 3</button>
@@ -639,11 +641,11 @@
 
       <div class="form-group full-width">
         <label>KOTAK 3: PASTE 4 LINK BACKDROP (FOTO 2 & 3)</label>
-        <textarea id="inStills" style="height: 60px;" placeholder="Link 1&#10;Link 2&#10;Link 3&#10;Link 4" onchange="loadStillsUrls()"></textarea>
+        <textarea id="inStills" style="height: 50px;" placeholder="Link 1&#10;Link 2&#10;Link 3&#10;Link 4" onchange="loadStillsUrls()"></textarea>
       </div>
     </div>
 
-    <div class="btn-group" style="flex-direction: column; gap: 5px; margin-top: 4px;">
+    <div class="btn-group" style="flex-direction: column; gap: 4px; margin-top: 2px;">
       <button class="btn btn-export" onclick="exportCurrentPhoto()"><i class="fa-solid fa-download"></i> Export Foto Yang Tampak</button>
       <button class="btn btn-all" id="btnExportAll" onclick="exportAllPhotos()"><i class="fa-solid fa-file-export"></i> Export Ketiga Foto (Batch PNG)</button>
     </div>
