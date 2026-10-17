@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Movie Calendar - Dark Letterboxd</title>
+  <!-- JSZip untuk membaca file ZIP Letterboxd -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Library PapaParse untuk parsing CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Google Fonts & FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas untuk Export PNG Resolusi Tinggi -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #14181c;
+      --card-empty: #1e262c;
+      --text-main: #ffffff;
+      --text-muted: #9ab;
+      --letterboxd-green: #00e054;
+      /* Lebar maksimal seluruh layout. Kecilkan (mis. 860px) kalau ingin semuanya lebih pendek. */
+      --max-w: 1000px;
+      /* Gelap tipis di atas foto background (0 = foto asli, 1 = hitam penuh) */
+      --bg-dim: 0.35;
+
+      /* EFEK KACA DI LAYAR (tidak ikut ke PNG).
+         --panel-bg: kepekatan panel (angka terakhir 0 = bening, 1 = solid).
+         --panel-blur: kekaburan foto di belakang panel. */
+      --panel-bg: rgba(20, 24, 28, 0.72);
+      --panel-blur: 12px;
+      /* Warna slot poster di layar; di PNG otomatis jadi solid */
+      --cell-bg: rgba(30, 38, 44, 0.65);
+
+      /* Ukuran angka dan bintang rating (turunkan untuk lebih kecil, mis. 0.08) */
+      --rating-size: 0.10;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      background-color: #06080d;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 12px;
+      display: flex;
+      position: relative;
+    }
+
+    /* LATAR BELAKANG HALAMAN (foto dari link di Google Sheet).
+       Berada di belakang semuanya dan tidak ikut ter-export ke PNG. */
+    #bgLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    #bgLayer.loaded { opacity: 1; }
+
+    /* ===== PESAN "HANYA DESKTOP" ===== */
+    .desktop-notice {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #06080d;
+      overflow-y: auto;
+    }
+    .dn-card {
+      max-width: 420px;
+      margin: auto;
+      text-align: center;
+      background: rgba(20, 24, 28, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      padding: 26px 22px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .dn-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 10px auto;
+      border-radius: 50%;
+      background: rgba(0, 224, 84, 0.12);
+      border: 1px solid rgba(0, 224, 84, 0.35);
+      color: var(--letterboxd-green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .dn-badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+      color: #14181c; background: var(--letterboxd-green);
+      padding: 2px 10px; border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .dn-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .dn-text { font-size: 13px; line-height: 1.6; color: #c0d0e0; }
+    .dn-note { font-size: 11.5px; line-height: 1.5; color: #8a9bb0; margin-top: 10px; }
+    .dn-thanks { font-size: 12px; font-weight: 700; color: var(--letterboxd-green); margin-top: 12px; }
+
+    html.mobile-blocked .main-wrapper { display: none !important; }
+    html.mobile-blocked .desktop-notice { display: flex; }
+
+    /* Cadangan lewat CSS murni (kalau JavaScript tidak berjalan): perangkat dengan input sentuh */
+    @media (hover: none), (pointer: coarse) {
+      .main-wrapper { display: none !important; }
+      .desktop-notice { display: flex; }
+    }
+
+    /* Blok utama: panel kiri + kalender kanan, tinggi mengikuti kalender, selalu di tengah */
+    .main-wrapper {
+      position: relative;
+      z-index: 1;
+      width: min(96vw, var(--max-w));
+      margin: auto;
+      display: grid;
+      grid-template-columns: 30.9% 63.3%;
+      column-gap: 5.8%;
+      align-items: stretch;
+    }
+
+    /* Panel Kontrol Kiri: kaca transparan, tinggi otomatis sama dengan kotak kalender.
+       contain: size membuat isi panel tidak ikut menentukan tinggi baris;
+       kalau isinya lebih panjang dari kotak kalender, panel bisa di-scroll. */
+    .control-panel {
+      contain: size;
+      background: var(--panel-bg);
+      -webkit-backdrop-filter: blur(var(--panel-blur));
+      backdrop-filter: blur(var(--panel-blur));
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .control-panel h3 {
+      font-size: 14px;
+      color: var(--letterboxd-green);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group.full-width { grid-column: span 2; }
+
+    .form-group label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .zip-hint {
+      font-size: 10px;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .zip-status {
+      font-size: 10.5px;
+      line-height: 1.4;
+      color: #F4D160;
+    }
+    .zip-status:empty { display: none; }
+
+    input[type="text"], select, textarea {
+      background: #0f1115;
+      border: 1px solid #2c3440;
+      color: #fff;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      outline: none;
+      width: 100%;
+    }
+
+    input[type="file"] {
+      color: var(--text-muted);
+      background: #0f1115;
+      border: 1px solid #2c3440;
+      padding: 3px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      width: 100%;
+    }
+    input[type="file"]::file-selector-button {
+      background: #222a33;
+      color: #ffffff;
+      border: 1px solid #3a4654;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-right: 6px;
+    }
+    input[type="file"]::file-selector-button:hover { background: #2c3846; }
+
+    textarea {
+      height: 90px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 10.5px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    button {
+      background-color: var(--letterboxd-green);
+      color: #14181c;
+      border: none;
+      padding: 9px 14px;
+      font-weight: 700;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .btn-export { background-color: #ff8000; color: #ffffff; flex: 1; }
+
+    /* AREA KANVAS KALENDER (kotak kanan): kaca di layar, tinggi mengikuti isi */
+    #captureArea {
+      background-color: var(--panel-bg);
+      -webkit-backdrop-filter: blur(var(--panel-blur));
+      backdrop-filter: blur(var(--panel-blur));
+      padding: 14px 18px 12px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* VERSI EXPORT: kelas ini hanya dipasang pada salinan yang difoto html2canvas,
+       jadi tampilan di layar tidak berubah. Hasilnya solid seperti Letterboxd. */
+    #captureArea.exporting {
+      background-color: var(--bg-color);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border: 1px solid #2c3440;
+      --cell-bg: #1e262c;
+    }
+
+    .calendar-header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .month-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .total-subtitle {
+      font-size: 0.75rem;
+      color: var(--letterboxd-green);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* --cw = lebar satu kolom (px), diisi otomatis oleh JS.
+       Ukuran rating dihitung dari --cw supaya selalu sebanding dengan ukuran poster. */
+    .calendar-block { --cw: 70px; }
+
+    .weekdays-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 5px;
+      margin-bottom: 6px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px 5px;
+    }
+
+    /* Satu slot = angka tanggal (di atas) + frame poster 2:3 (di bawah) */
+    .day-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .date-label {
+      height: 12px;
+      line-height: 12px;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #bcc8d2;
+    }
+
+    .day-cell {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      border-radius: 5px;
+      overflow: hidden;
+      background-color: var(--cell-bg);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .day-cell.has-multiple {
+      background-color: transparent !important;
+      border: none;
+      overflow: visible;
+    }
+
+    .poster-container {
+      --k: 1; /* faktor skala rating: 1 = poster penuh, 0.5 = poster setengah lebar */
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      border-radius: 5px;
+      background: transparent;
+    }
+
+    .poster-container.count-1 { display: block; }
+
+    .poster-container.count-2,
+    .poster-container.count-3,
+    .poster-container.count-4 {
+      --k: 0.5;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 2px;
+      overflow: visible;
+    }
+
+    /* 2 film: diagonal */
+    .poster-container.count-2 .movie-item-wrapper:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .poster-container.count-2 .movie-item-wrapper:nth-child(2) { grid-column: 2; grid-row: 2; }
+
+    /* 3 film: yang ketiga di tengah bawah */
+    .poster-container.count-3 .movie-item-wrapper:nth-child(3) {
+      grid-column: span 2;
+      width: 50%;
+      justify-self: center;
+    }
+
+    /* Kotak poster: gambar di dalamnya dipotong dari tengah (cover) lewat JavaScript,
+       jadi proporsi asli gambar terjaga dan tidak melar, baik di layar maupun di PNG. */
+    .movie-item-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .movie-item-wrapper img {
+      display: block;
+      max-width: none;
+      user-select: none;
+    }
+
+    /* Rating: semua ukuran dihitung dari lebar kolom (--cw), --rating-size, dan faktor skala (--k) */
+    .rating-badge {
+      position: absolute;
+      bottom: calc(var(--cw) * var(--rating-size) * 0.25 * var(--k));
+      right: calc(var(--cw) * var(--rating-size) * 0.25 * var(--k));
+      z-index: 15;
+      background: rgba(0, 0, 0, 0.85);
+      color: var(--letterboxd-green);
+      font-size: calc(var(--cw) * var(--rating-size) * var(--k));
+      font-weight: 700;
+      line-height: 1.25;
+      padding: calc(var(--cw) * var(--rating-size) * 0.14 * var(--k)) calc(var(--cw) * var(--rating-size) * 0.4 * var(--k));
+      border-radius: calc(var(--cw) * var(--rating-size) * 0.25 * var(--k));
+    }
+
+    /* FOOTER (sama dengan poster-reviewer, collage, dan wrapped): logo di kiri, link akun di kanan */
+    .user-profile-card {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 7px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #captureArea.exporting .user-profile-card { border-top-color: #1e262c; }
+
+    .lbxd-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lbxd-dots {
+      font-size: 10.5px;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    .brand-name {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .user-handle-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .user-handle-info .handle-text {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .user-handle-info .sub-cta {
+      font-size: 7.5px;
+      color: #8a9bb0;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Jendela desktop yang sempit: panel ditumpuk ke bawah */
+    @media (max-width: 900px) {
+      .main-wrapper {
+        width: 100%;
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 15px;
+      }
+      .control-panel { contain: none; overflow-y: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PESAN: HANYA DAPAT DIAKSES VIA DESKTOP -->
+<div class="desktop-notice" id="desktopNotice" role="alert">
+  <div class="dn-card">
+    <div class="dn-icon"><i class="fa-solid fa-desktop"></i></div>
+    <div class="dn-badge">Desktop</div>
+    <div class="dn-title">Hanya Tersedia di Desktop</div>
+    <p class="dn-text">
+      Hanya dapat diakses melalui komputer atau laptop (desktop).
+      Silakan buka kembali halaman ini menggunakan perangkat desktop agar seluruh fitur dapat berjalan dengan baik.
+    </p> 
+  </div>
+</div>
+
+<!-- Lapisan background halaman (diisi otomatis dari Google Sheet) -->
+<div id="bgLayer"></div>
+
+<div class="main-wrapper">
+
+  <!-- PANEL KONTROL (KOLOM KIRI) -->
+  <div class="control-panel">
+    <h3><i class="fa-solid fa-sliders"></i> Pengaturan Data Film Kalender</h3>
+
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label>1. Upload File ZIP Letterboxd</label>
+        <input type="file" id="zipFile" accept=".zip" onchange="handleZipUpload(event)">
+        <div class="zip-hint">Cara mendapatkan: Letterboxd → Settings → Data → Export Your Data. File diproses di browser Anda dan tidak diunggah ke mana pun.</div>
+        <div class="zip-status" id="zipStatus"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Pilih Bulan</label>
+        <select id="selectMonth" onchange="updateCalendarSettings()">
+          <option value="0">Januari</option>
+          <option value="1">Februari</option>
+          <option value="2">Maret</option>
+          <option value="3">April</option>
+          <option value="4">Mei</option>
+          <option value="5">Juni</option>
+          <option value="6">Juli</option>
+          <option value="7">Agustus</option>
+          <option value="8">September</option>
+          <option value="9" selected>Oktober</option>
+          <option value="10">November</option>
+          <option value="11">Desember</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Input Tahun</label>
+        <input type="text" id="selectYear" value="2026" oninput="updateCalendarSettings()">
+      </div>
+
+      <div class="form-group full-width">
+        <label>Link Letterboxd Kamu</label>
+        <input type="text" id="inputLetterboxdLink" value="letterboxd.com/hwangik" placeholder="letterboxd.com/username" oninput="updateHandle()">
+      </div>
+
+      <div class="form-group full-width">
+        <label>2. Paste Massal Link Poster (Berurutan dari awal sampai akhir bulan, 1 link per baris)</label>
+        <textarea id="bulkPosterInput" placeholder="https://image.tmdb.org/t/p/original/...&#10;https://image.tmdb.org/t/p/original/..."></textarea>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button id="btnApply" onclick="applyPosters()"><i class="fa-solid fa-wand-magic-sparkles"></i> Terapkan Poster</button>
+      <button class="btn-export" onclick="exportPNG()"><i class="fa-solid fa-download"></i> Export PNG (HD Quality)</button>
+    </div>
+  </div>
+
+  <!-- AREA KANVAS KALENDER (KOLOM KANAN) -->
+  <div id="captureArea">
+    <div class="calendar-header">
+      <div class="month-title" id="displayMonthYear">Oktober 2026</div>
+      <div class="total-subtitle" id="totalWatchedText">Total 0 films watched</div>
+    </div>
+
+    <div class="calendar-block" id="calendarBlock">
+      <div class="weekdays-grid">
+        <div>Senin</div>
+        <div>Selasa</div>
+        <div>Rabu</div>
+        <div>Kamis</div>
+        <div>Jumat</div>
+        <div>Sabtu</div>
+        <div>Minggu</div>
+      </div>
+
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- Grid dirender otomatis via JS -->
+      </div>
+    </div>
+
+    <!-- FOOTER LETTERBOXD -->
+    <div class="user-profile-card">
+      <div class="lbxd-brand">
+        <div class="lbxd-dots">
+          <span style="color:#00e054;">●</span><span style="color:#ff8000;">●</span><span style="color:#40bcf4;">●</span>
+        </div>
+        <span class="brand-name">Letterboxd</span>
+      </div>
+      <div class="user-handle-info">
+        <span class="handle-text js-handle">letterboxd.com/hwangik</span>
+        <span class="sub-cta">Follow on Letterboxd</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ================================================================
+     KUNCI DESKTOP
+     Halaman ini hanya untuk desktop. Pengecekan TIDAK bergantung pada lebar halaman,
+     jadi mode "Situs desktop" di peramban ponsel tidak membantu. Yang diperiksa:
+     jenis peramban, perangkat sentuh tanpa mouse/trackpad, input utama sentuhan,
+     iPhone/iPad yang menyamar sebagai Mac, dan ukuran layar fisik.
+     ================================================================ */
+  function isUnsupportedDevice() {
+    const ua = navigator.userAgent || '';
+    const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
+    const touchPoints = navigator.maxTouchPoints || 0;
+
+    const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|Opera Mini|IEMobile|BlackBerry|webOS/i.test(ua);
+    const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
+    const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          // iPhone/iPad dengan "Request Desktop Website"
+    const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    // layar sentuh tanpa mouse/trackpad
+    const coarsePrimary = mq('(pointer: coarse)') || mq('(hover: none)');
+    const smallScreen = screen.width > 0 && Math.min(screen.width, screen.height) < 480;
+
+    return mobileUA || uaDataMobile || macTouch || touchOnly || coarsePrimary || smallScreen;
+  }
+
+  function applyDeviceGate() {
+    const blocked = isUnsupportedDevice();
+    document.documentElement.classList.toggle('mobile-blocked', blocked);
+    return blocked;
+  }
+
+  applyDeviceGate();
+
+  /* ================================================================
+     PENGATURAN BACKGROUND
+     Link CSV dari Google Sheet yang sudah "Dipublikasikan ke web".
+     Sel yang berisi link gambar (https://...) dipakai sebagai background.
+     Ganti isi sel di Sheet untuk mengganti background tanpa menyentuh kode ini.
+     ================================================================ */
+  const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
+
+  /* ================================================================
+     PENGATURAN EXPORT & KUALITAS GAMBAR
+     EXPORT_SCALE = skala export PNG. Poster diperkecil ke sekitar 2x ukuran yang
+     dibutuhkan di PNG supaya pengecilan terakhir halus dan kualitas tetap bening.
+     ================================================================ */
+  const EXPORT_SCALE = 4;
+  const POSTER_FETCH_W = 800; // lebar maksimal poster yang diunduh dari proxy
+
+  let rawCSVRows = [];
+  let currentMonthData = [];
+
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  /* ---------- Background dari Google Sheet ---------- */
+  async function loadBackgroundFromSheet() {
+    if (!BG_SHEET_CSV_URL) return;
+
+    try {
+      // Tambah parameter waktu supaya tidak terkena cache browser
+      const sep = BG_SHEET_CSV_URL.includes('?') ? '&' : '?';
+      const res = await fetch(BG_SHEET_CSV_URL + sep + 't=' + Date.now());
+      if (!res.ok) throw new Error("Sheet tidak bisa dibaca: " + res.status);
+      const text = await res.text();
+
+      // Ambil sel pertama yang berisi link http(s)
+      const parsed = Papa.parse(text, { header: false, skipEmptyLines: true });
+      const cells = [].concat(...parsed.data).map(c => String(c).trim());
+      const url = cells.find(c => /^https?:\/\//i.test(c));
+      if (!url) {
+        console.warn("Tidak ada link gambar (https://...) di Sheet.");
+        return;
+      }
+
+      // Pastikan gambar benar-benar bisa dimuat sebelum dipasang
+      const img = new Image();
+      img.onload = () => {
+        const layer = document.getElementById('bgLayer');
+        const safeUrl = url.replace(/"/g, '%22');
+        layer.style.backgroundImage =
+          `linear-gradient(rgba(6,8,13,var(--bg-dim)), rgba(6,8,13,var(--bg-dim))), url("${safeUrl}")`;
+        layer.classList.add('loaded');
+      };
+      img.onerror = () => console.warn("Gambar background tidak bisa dimuat:", url);
+      img.src = url;
+    } catch (err) {
+      console.warn("Background dilewati:", err);
+    }
+  }
+
+  function getSelectedMonthYear() {
+    return {
+      month: parseInt(document.getElementById("selectMonth").value),
+      year: parseInt(document.getElementById("selectYear").value) || 2026
+    };
+  }
+
+  // Link akun di footer (Letterboxd)
+  function updateHandle() {
+    const val = document.getElementById('inputLetterboxdLink').value.trim() || 'letterboxd.com/hwangik';
+    document.querySelectorAll('.js-handle').forEach(el => { el.innerText = val; });
+  }
+
+  // Hitung lebar satu kolom (px) agar ukuran rating selalu sebanding dengan poster
+  function updateCellSize() {
+    const grid = document.getElementById("calendarGrid");
+    const w = grid.clientWidth;
+    if (!w) return;
+    const cw = (w - 6 * 5) / 7; // 6 celah x 5px
+    document.getElementById("calendarBlock").style.setProperty('--cw', cw + 'px');
+  }
+
+  function updateCalendarSettings() {
+    const { month, year } = getSelectedMonthYear();
+    renderCalendar();
+    if (rawCSVRows.length > 0) {
+      filterAndDisplayData(month, year);
+    }
+  }
+
+  function renderCalendar() {
+    const { month, year } = getSelectedMonthYear();
+    document.getElementById("displayMonthYear").innerText = `${monthNames[month]} ${year}`;
+    const grid = document.getElementById("calendarGrid");
+    grid.innerHTML = "";
+
+    let firstDayIndex = new Date(year, month, 1).getDay();
+    let startingDay = (firstDayIndex === 0) ? 6 : firstDayIndex - 1; // Mulai Senin
+    let totalDays = new Date(year, month + 1, 0).getDate();
+
+    // Slot kosong awal bulan
+    for (let i = 0; i < startingDay; i++) {
+      grid.appendChild(document.createElement("div"));
+    }
+
+    // Tanggal 1 sampai akhir bulan: angka di atas, frame poster di bawah
+    for (let day = 1; day <= totalDays; day++) {
+      let slot = document.createElement("div");
+      slot.className = "day-slot";
+      slot.innerHTML = `
+        <div class="date-label">${day}</div>
+        <div class="day-cell" id="day-${day}">
+          <div class="poster-container" id="poster-box-${day}"></div>
+        </div>
+      `;
+      grid.appendChild(slot);
+    }
+
+    updateCellSize();
+  }
+
+  /* ---------- Impor langsung file ZIP Letterboxd ---------- */
+  function setZipStatus(msg) {
+    document.getElementById('zipStatus').innerText = msg;
+  }
+
+  // Mengolah baris diary.csv menjadi daftar tontonan (tahun, bulan, tanggal, rating)
+  function processDiaryRows(rows) {
+    rawCSVRows = [];
+    rows.forEach(row => {
+      const watchDate = row['Watched Date'] || row['Date'] || row['Rating Date'] || '';
+      if (!watchDate) return;
+
+      const dateParts = watchDate.split('-');
+      if (dateParts.length >= 3) {
+        const y = parseInt(dateParts[0].trim());
+        const m = parseInt(dateParts[1].trim()) - 1;
+        const d = parseInt(dateParts[2].trim());
+        const rating = row['Rating'] ? row['Rating'].trim() : '';
+
+        rawCSVRows.push({
+          year: y,
+          month: m,
+          day: d,
+          rating: rating
+        });
+      }
+    });
+
+    const { month, year } = getSelectedMonthYear();
+    filterAndDisplayData(month, year);
+  }
+
+  async function handleZipUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setZipStatus('Membuka file ZIP...');
+
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const findFile = re => zip.file(re).filter(f => !/(^|\/)(deleted|orphaned)\//i.test(f.name))[0] || null;
+      const readCSV = async re => {
+        const f = findFile(re);
+        if (!f) return null;
+        const text = (await f.async('string')).replace(/^\uFEFF/, '');
+        return Papa.parse(text, { header: true, skipEmptyLines: true }).data;
+      };
+
+      // diary.csv dipilih otomatis dari dalam ZIP
+      const diary = await readCSV(/(^|\/)diary\.csv$/i);
+      if (!diary) {
+        setZipStatus('Error: diary.csv tidak ditemukan di dalam ZIP. Pastikan ini file ekspor data Letterboxd.');
+        return;
+      }
+
+      // Nama pengguna untuk footer (opsional, kalau profile.csv ada di dalam ZIP)
+      const profile = await readCSV(/(^|\/)profile\.csv$/i);
+      if (profile && profile[0]) {
+        const username = (profile[0]['Username'] || '').trim();
+        if (username) {
+          document.getElementById('inputLetterboxdLink').value = 'letterboxd.com/' + username;
+          updateHandle();
+        }
+      }
+
+      processDiaryRows(diary);
+      setZipStatus(`Berhasil membaca diary.csv: ${rawCSVRows.length} entri bertanggal.`);
+    } catch (err) {
+      setZipStatus('Gagal membaca file ZIP: ' + err.message);
+    }
+  }
+
+  function filterAndDisplayData(month, year) {
+    currentMonthData = rawCSVRows.filter(item => item.year === year && item.month === month);
+    currentMonthData.sort((a, b) => a.day - b.day);
+
+    document.getElementById("totalWatchedText").innerText = `Total ${currentMonthData.length} films watched`;
+    renderCalendar();
+  }
+
+  /* ================================================================
+     GAMBAR POSTER
+     ================================================================ */
+  async function fetchImageAsBase64(url, maxW) {
+    const cleanUrl = url.trim().replace(/^"|"$/g, '');
+    const w = maxW || POSTER_FETCH_W;
+    const proxyList = [
+      // w = lebar maksimal, we = tanpa memperbesar, q = kualitas JPEG
+      u => `https://images.weserv.nl/?url=${encodeURIComponent(u)}&w=${w}&we&q=92`,
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+    ];
+
+    for (let getProxy of proxyList) {
+      try {
+        const response = await fetch(getProxy(cleanUrl));
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        if (blob.size > 0) {
+          return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (err) {
+        console.warn("Proxy attempt failed:", err);
+      }
+    }
+    return cleanUrl;
+  }
+
+  function loadImg(src) {
+    return new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = src;
+    });
+  }
+
+  /* Mengecilkan gambar bertahap (setengah demi setengah) dengan kualitas tinggi,
+     hanya kalau gambar jauh lebih besar dari yang dibutuhkan. Hasilnya halus, tidak bergerigi. */
+  async function downscaleDataUrl(src, targetW) {
+    if (!String(src).startsWith('data:')) return src;
+    try {
+      const img = await loadImg(src);
+      if (img.naturalWidth <= targetW * 1.15) return src;
+
+      let source = img;
+      let w = img.naturalWidth, h = img.naturalHeight;
+
+      while (w / 2 >= targetW) {
+        const c = document.createElement('canvas');
+        c.width = Math.round(w / 2);
+        c.height = Math.round(h / 2);
+        const cx = c.getContext('2d');
+        cx.imageSmoothingEnabled = true;
+        cx.imageSmoothingQuality = 'high';
+        cx.drawImage(source, 0, 0, c.width, c.height);
+        source = c; w = c.width; h = c.height;
+      }
+
+      const out = document.createElement('canvas');
+      out.width = targetW;
+      out.height = Math.round(h * targetW / w);
+      const ox = out.getContext('2d');
+      ox.imageSmoothingEnabled = true;
+      ox.imageSmoothingQuality = 'high';
+      ox.drawImage(source, 0, 0, out.width, out.height);
+      return out.toDataURL('image/jpeg', 0.95);
+    } catch (e) {
+      return src;
+    }
+  }
+
+  function grayFill() {
+    const d = document.createElement('div');
+    d.style.cssText = 'background:#1e262c; width:100%; height:100%;';
+    return d;
+  }
+
+  /* Memasang poster ke dalam kotak dengan cara "cover":
+     - gambar diperbesar secukupnya sampai menutupi seluruh kotak, lalu dipotong dari tengah
+     - gambar yang kecil di-zoom (diperbesar), bukan ditarik
+     - proporsi asli gambar selalu terjaga, sehingga tidak melar di layar maupun di PNG
+     Rasio kotak diukur langsung dari tampilan (1 film, 2, 3, atau 4 film per hari). */
+  async function placeCoverImage(wrapper, src) {
+    const bw = wrapper.offsetWidth;
+    const bh = wrapper.offsetHeight;
+    const ratio = (bw > 0 && bh > 0) ? bw / bh : 2 / 3;
+    const targetW = Math.max(300, Math.round((bw || 80) * EXPORT_SCALE * 2));
+
+    const finalSrc = await downscaleDataUrl(src, targetW);
+
+    await new Promise(resolve => {
+      const img = new Image();
+      img.alt = '';
+      img.draggable = false;
+      img.onload = () => {
+        const ri = img.naturalWidth / img.naturalHeight;
+        let pw = 100, ph = 100;
+        if (ri > ratio) pw = (ri / ratio) * 100;  // gambar lebih lebar dari kotak: potong kiri-kanan
+        else ph = (ratio / ri) * 100;             // gambar lebih tinggi dari kotak: potong atas-bawah
+        img.style.cssText =
+          `position:absolute; width:${pw}%; height:${ph}%; left:${(100 - pw) / 2}%; top:${(100 - ph) / 2}%;`;
+        wrapper.insertBefore(img, wrapper.firstChild);
+        resolve();
+      };
+      img.onerror = () => {
+        wrapper.insertBefore(grayFill(), wrapper.firstChild);
+        resolve();
+      };
+      img.src = finalSrc;
+    });
+  }
+
+  async function applyPosters() {
+    const { month, year } = getSelectedMonthYear();
+
+    if (currentMonthData.length === 0) {
+      alert(`Perhatian: Tidak ada catatan film/log yang ditemukan pada ${monthNames[month]} ${year}! Pastikan file ZIP sudah diimpor dan tahun/bulan sudah sesuai.`);
+      return;
+    }
+
+    const btn = document.getElementById('btnApply');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memuat Poster...';
+    btn.disabled = true;
+
+    renderCalendar();
+
+    const rawPosters = document.getElementById("bulkPosterInput").value.trim();
+    const posterUrls = rawPosters ? rawPosters.split("\n").map(u => u.trim()).filter(u => u) : [];
+
+    let groupedByDay = {};
+    for (let i = 0; i < currentMonthData.length; i++) {
+      let movie = currentMonthData[i];
+      let url = posterUrls[i] || "";
+      let base64Img = "";
+
+      if (url) {
+        try {
+          base64Img = await fetchImageAsBase64(url, POSTER_FETCH_W);
+        } catch (e) {
+          console.warn("Gagal konversi poster:", e);
+        }
+      }
+
+      if (!groupedByDay[movie.day]) {
+        groupedByDay[movie.day] = [];
+      }
+      groupedByDay[movie.day].push({
+        rating: movie.rating,
+        posterSrc: base64Img || url
+      });
+    }
+
+    const placing = [];
+
+    for (let day in groupedByDay) {
+      let cell = document.getElementById(`day-${day}`);
+      let box = document.getElementById(`poster-box-${day}`);
+      if (!box || !cell) continue;
+
+      const shown = groupedByDay[day].slice(0, 4); // maksimal 4 film per hari
+      const n = shown.length;
+
+      if (n > 1) {
+        cell.classList.add('has-multiple');
+      }
+
+      box.className = `poster-container count-${n}`;
+      box.innerHTML = "";
+
+      shown.forEach(m => {
+        let wrapper = document.createElement("div");
+        wrapper.className = "movie-item-wrapper";
+        if (m.rating) {
+          wrapper.innerHTML = `<div class="rating-badge"><i class="fa-solid fa-star" style="color:#00e054;"></i> ${m.rating}</div>`;
+        }
+        box.appendChild(wrapper);
+
+        if (m.posterSrc) {
+          placing.push(placeCoverImage(wrapper, m.posterSrc));
+        } else {
+          wrapper.insertBefore(grayFill(), wrapper.firstChild);
+        }
+      });
+    }
+
+    // Tunggu semua poster selesai terpasang sebelum tombol aktif lagi
+    await Promise.all(placing);
+
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+
+  function exportPNG() {
+    const { month, year } = getSelectedMonthYear();
+
+    if (currentMonthData.length === 0) {
+      alert(`Tidak dapat mengekspor: Tidak ada catatan film/log pada ${monthNames[month]} ${year}!`);
+      return;
+    }
+
+    updateCellSize();
+    const captureArea = document.getElementById("captureArea");
+
+    html2canvas(captureArea, {
+      scale: EXPORT_SCALE,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#14181c",
+      // Versi solid hanya dipasang pada salinan yang difoto, layar tidak berubah
+      onclone: (clonedDoc) => {
+        const el = clonedDoc.getElementById("captureArea");
+        if (el) el.classList.add("exporting");
+      }
+    }).then(canvas => {
+      let link = document.createElement("a");
+      link.download = `Movie-Calendar-${monthNames[month]}-${year}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }).catch(err => {
+      alert("Gagal melakukan export gambar: " + err.message);
+    });
+  }
+
+  window.onload = () => {
+    // Perangkat non-desktop: berhenti di sini, hanya pesan "Hanya Tersedia di Desktop" yang tampil
+    if (applyDeviceGate()) return;
+
+    updateHandle();
+    renderCalendar();
+    loadBackgroundFromSheet();
+    window.addEventListener('resize', updateCellSize);
+    if (window.ResizeObserver) {
+      new ResizeObserver(updateCellSize).observe(document.getElementById("calendarGrid"));
+    }
+  };
+</script>
+
+</body>
+</html>
