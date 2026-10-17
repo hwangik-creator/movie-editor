@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hwang's CineHub</title>
-  <!-- Favicon Ikon Film untuk Tab Browser -->
-  <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=vsiehiiUQpn5&format=png&color=000000">
+  <title>Hwang's Tools</title>
+  <!-- Favicon Ikon Film Reel Modern yang Senada dengan Ikon Tombol -->
+  <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=wd93opJhF4VC&format=png&color=FFFFFF">
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,7 +34,7 @@
       left: 0;
     }
 
-    /* Layer Background Dinamis dengan Efek Faded/Fade-In yang Mulus */
+    /* Layer Background Dinamis dengan Efek Fade-In */
     .bg-layer {
       position: absolute;
       top: 0;
@@ -252,7 +252,6 @@
     html.mobile-blocked .home-container { display: none !important; }
     html.mobile-blocked .desktop-notice { display: flex; }
 
-    /* Cadangan lewat CSS murni jika JS tidak aktif */
     @media (hover: none), (pointer: coarse) {
       .home-container { display: none !important; }
       .desktop-notice { display: flex; }
@@ -282,7 +281,7 @@
     <div></div> <!-- Spacer atas -->
 
     <div class="content-wrapper">
-      <h1 class="home-title">Hwang's Cine<span>Hub</span></h1>
+      <h1 class="home-title">Hwang's <span>Tools</span></h1>
       <p class="home-subtitle">Dibuat dan digunakan untuk keperluan pribadi.</p>
 
       <div class="menu-grid">
@@ -330,7 +329,7 @@
 
     <!-- Footer Bawah -->
     <div class="home-footer">
-      Inspired by Letterboxd. by Hwang
+      Inspired by Letterboxd. Built by Hwang with AI
     </div>
   </div>
 
@@ -386,7 +385,6 @@
         }, 100);
       },
       error: function() {
-        // Fallback jika spreadsheet gagal dibaca
         const bgLayer = document.getElementById("bgLayer");
         bgLayer.style.backgroundImage = `url('https://i.ibb.co.com/N2kZsRV6/p2914240511.jpg')`;
         setTimeout(() => {
