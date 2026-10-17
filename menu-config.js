@@ -1,5 +1,7 @@
 /* ==========================================================================
-   PENGATURAN MENU & TOMBOL HWANG'S CINEHUB (DENGAN TRANSISI HALUS)
+   PENGATURAN MENU & TOMBOL HWANG'S TOOLS
+   - active: true  -> Tombol Aktif & Normal
+   - active: false -> Tombol Mati / Segera Hadir (Soon)
    ========================================================================== */
 
 const menuList = [
@@ -22,7 +24,7 @@ const menuList = [
     desc: "Buat kolase poster film bertema bebas dengan kustomisasi judul sesukamu.",
     url: "https://sites.google.com/view/custom-favorite-thematic-colla/collage",
     icon: "fa-layer-group",
-    active: false
+    active: false      
   },
   {
     title: "Year in Review",
@@ -38,14 +40,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("menuGrid");
   if (!grid) return;
 
-  // Render HTML tombol ke dalam grid
   grid.innerHTML = menuList.map(item => {
     const statusClass = item.active ? "" : "disabled";
     const badgeText = item.active ? "Active" : "Soon";
     const targetUrl = item.active ? item.url : "#";
+    
+    // Membuka di tab baru (target="_blank") agar tidak ada kilatan putih di tab utama
+    const targetAttr = item.active ? 'target="_blank" rel="noopener noreferrer"' : '';
 
     return `
-      <a href="${targetUrl}" class="menu-card ${statusClass}" ${item.active ? 'data-smooth-link' : ''}>
+      <a href="${targetUrl}" class="menu-card ${statusClass}" ${targetAttr}>
         <div class="card-badge">${badgeText}</div>
         <div class="card-icon">
           <i class="fa-solid ${item.icon}"></i>
@@ -55,22 +59,4 @@ document.addEventListener("DOMContentLoaded", () => {
       </a>
     `;
   }).join("");
-
-  // Menggunakan Event Delegation agar klik pada tombol aktif langsung memicu transisi halus
-  grid.addEventListener("click", function(e) {
-    const link = e.target.closest('a[data-smooth-link]');
-    if (!link) return;
-
-    e.preventDefault(); // Tahan sebentar pemuatan halaman
-    const destination = link.href;
-
-    // Pastikan transisi opacity aktif di body
-    document.body.style.transition = "opacity 0.35s ease";
-    document.body.style.opacity = "0";
-
-    // Pindah ke halaman tujuan setelah animasi selesai
-    setTimeout(() => {
-      window.location.href = destination;
-    }, 350);
-  });
 });
