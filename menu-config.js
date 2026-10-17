@@ -6,14 +6,14 @@ const menuList = [
   {
     title: "Monthly Calendar",
     desc: "Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.",
-    url: "calendar.html", // Mengarah ke file lokal di GitHub
+    url: "calendar.html",
     icon: "fa-calendar-days",
     active: true
   },
   {
     title: "Custom Posters",
     desc: "Generator template poster ulasan film siap post untuk media sosial.",
-    url: "https://sites.google.com/view/dual-picture-signature-templat/poster-reviewer",
+    url: "posters.html", // Mengarah ke file lokal di GitHub
     icon: "fa-film",
     active: true
   },
@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const badgeText = item.active ? "Active" : "Soon";
     const targetUrl = item.active ? item.url : "#";
     
-    // Jika link mengarah ke Google Sites eksternal, buka tab baru. Jika file lokal (.html), buka di tab yang sama.
     const isExternal = targetUrl.startsWith("http");
     const targetAttr = isExternal ? 'target="_blank" rel="noopener noreferrer"' : '';
 
