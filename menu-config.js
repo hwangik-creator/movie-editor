@@ -33,7 +33,6 @@ const menuList = [
   }
 ];
 
-// Script otomatis untuk merender tombol dengan efek transisi halus di tab yang sama
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("menuGrid");
   if (!grid) return;
@@ -58,19 +57,20 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }).join("");
 
-  // Transisi halus (Fade Out) khusus untuk navigasi antar-file lokal di GitHub
+  // Transisi halus menggunakan overlay khusus tanpa kedip putih/hitam polos
   grid.addEventListener("click", function(e) {
     const link = e.target.closest('a[data-smooth-link]');
     if (!link) return;
 
     e.preventDefault();
     const destination = link.href;
-
-    document.body.style.transition = "opacity 0.3s ease";
-    document.body.style.opacity = "0";
+    const overlay = document.getElementById("pageOverlay");
+    if (overlay) {
+      overlay.style.opacity = "1";
+    }
 
     setTimeout(() => {
       window.location.href = destination;
-    }, 300);
+    }, 350);
   });
 });
