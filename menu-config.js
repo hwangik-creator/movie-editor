@@ -24,14 +24,14 @@ const menuList = [
     desc: "Buat kolase poster film bertema bebas dengan kustomisasi judul sesukamu.",
     url: "https://sites.google.com/view/custom-favorite-thematic-colla/collage",
     icon: "fa-layer-group",
-    active: true
+    active: false
   },
   {
     title: "Year in Review",
     desc: "Rangkuman statistik tahunan film yang telah ditonton beserta rekap data lengkap.",
     url: "https://sites.google.com/view/letterboxd-pro-tmdb-api-wrappe/yearinreview",
     icon: "fa-chart-pie",
-    active: true // Ubah ke false jika sewaktu-waktu mau dimatikan
+    active: false // Ubah ke false jika sewaktu-waktu mau dimatikan
   }
 ];
 
