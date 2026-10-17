@@ -3,262 +3,387 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineHub Collection • Hub Menu</title>
-  <!-- Google Fonts & FontAwesome 6 untuk Ikon -->
+  <title>Hwang's CineHub</title>
+  <!-- Favicon Ikon Film untuk Tab Browser -->
+  <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=vsiehiiUQpn5&format=png&color=000000">
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PapaParse Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
-
     :root {
-      --max-w: 520px;
-      --panel-bg: rgba(20, 24, 28, 0.78);
-      --panel-blur: 14px;
       --letterboxd-green: #00e054;
-      --letterboxd-orange: #ff8000;
-      --letterboxd-blue: #00bcf4;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      width: 100%;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       background-color: #06080d;
       color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
     }
 
-    body {
-      min-height: 100vh;
+    /* Layer Background Dinamis dengan Efek Faded/Fade-In yang Mulus */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+    }
+
+    .bg-layer.loaded {
+      opacity: 1;
+    }
+
+    /* Overlay Gelap Transparan */
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55));
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .home-container {
+      width: 100%;
+      max-width: 1200px;
       padding: 20px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    /* BACKGROUND DEKORATIF */
-    #bgLayer {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background: radial-gradient(circle at 50% 20%, #1a2332 0%, #06080d 75%);
-    }
-
-    .main-container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: var(--max-w);
-      background: var(--panel-bg);
-      -webkit-backdrop-filter: blur(var(--panel-blur));
-      backdrop-filter: blur(var(--panel-blur));
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 28px 24px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
       text-align: center;
+      position: relative;
+      height: 100vh;
+      justify-content: space-between;
+      z-index: 10;
     }
 
-    .hub-header {
-      margin-bottom: 24px;
+    .content-wrapper {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
     }
 
-    .hub-badge {
-      display: inline-block;
-      font-size: 10px;
+    .home-title {
+      font-size: 2.3rem;
       font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #14181c;
-      background: var(--letterboxd-green);
-      padding: 3px 12px;
-      border-radius: 20px;
-      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.7);
     }
 
-    .hub-title {
-      font-size: 22px;
-      font-weight: 800;
+    .home-title span {
+      color: var(--letterboxd-green);
+    }
+
+    .home-subtitle {
+      font-size: 0.95rem;
+      color: #9ab;
+      margin-bottom: 35px;
+      font-weight: 500;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 700px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+        max-width: 380px;
+      }
+    }
+
+    .menu-card {
+      background: rgba(20, 24, 28, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
       color: #ffffff;
+      transition: all 0.3s ease;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--letterboxd-green);
+      background: rgba(25, 30, 36, 0.9);
+      box-shadow: 0 20px 40px rgba(0, 224, 84, 0.2);
+    }
+
+    .card-icon {
+      width: 55px;
+      height: 55px;
+      background: rgba(0, 224, 84, 0.15);
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      color: var(--letterboxd-green);
+      margin-bottom: 18px;
+      transition: background 0.3s ease;
+    }
+
+    .menu-card:hover .card-icon {
+      background: var(--letterboxd-green);
+      color: #14181c;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
       margin-bottom: 6px;
     }
 
-    .hub-subtitle {
-      font-size: 12.5px;
-      color: #8a9bb0;
-      line-height: 1.5;
-    }
-
-    /* MENU TOMBOL NAVIGASI */
-    .menu-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(15, 17, 21, 0.85);
-      border: 1px solid rgba(44, 52, 64, 0.8);
-      border-radius: 12px;
-      padding: 14px 16px;
-      text-decoration: none;
-      color: #ffffff;
-      transition: all 0.25s ease;
-      text-align: left;
-    }
-
-    .menu-item:hover {
-      border-color: var(--letterboxd-green);
-      background: rgba(20, 28, 24, 0.9);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 224, 84, 0.15);
-    }
-
-    .menu-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: rgba(0, 224, 84, 0.1);
-      border: 1px solid rgba(0, 224, 84, 0.3);
-      color: var(--letterboxd-green);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
-      transition: background 0.25s, color 0.25s;
-    }
-
-    .menu-item:hover .menu-icon {
-      background: var(--letterboxd-green);
-      color: #14181c;
-    }
-
-    .menu-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .menu-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 3px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .menu-desc {
-      font-size: 11px;
-      color: #8a9bb0;
+    .card-desc {
+      font-size: 0.8rem;
+      color: #9ab;
       line-height: 1.4;
     }
 
-    .menu-arrow {
-      color: #526070;
-      font-size: 14px;
-      transition: transform 0.2s, color 0.2s;
-    }
-
-    .menu-item:hover .menu-arrow {
-      transform: translateX(3px);
+    .card-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(0, 224, 84, 0.2);
       color: var(--letterboxd-green);
     }
 
-    /* VARIASI WARNA IKON KHUSUS TOMBOL TERTENTU */
-    .menu-item.orange:hover {
-      border-color: var(--letterboxd-orange);
-      box-shadow: 0 6px 20px rgba(255, 128, 0, 0.15);
-    }
-    .menu-item.orange:hover .menu-icon {
-      background: var(--letterboxd-orange);
-      color: #14181c;
-    }
-    .menu-item.orange .menu-icon {
-      background: rgba(255, 128, 0, 0.1);
-      border-color: rgba(255, 128, 0, 0.3);
-      color: var(--letterboxd-orange);
-    }
-    .menu-item.orange:hover .menu-arrow {
-      color: var(--letterboxd-orange);
+    /* Footer Estetik */
+    .home-footer {
+      font-size: 0.75rem;
+      color: #789;
+      margin-bottom: 15px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      letter-spacing: 0.3px;
     }
 
-    .menu-item.blue:hover {
-      border-color: var(--letterboxd-blue);
-      box-shadow: 0 6px 20px rgba(0, 188, 244, 0.15);
+    /* ===== PESAN "HANYA DESKTOP" ===== */
+    .desktop-notice {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #06080d;
+      overflow-y: auto;
     }
-    .menu-item.blue:hover .menu-icon {
-      background: var(--letterboxd-blue);
-      color: #14181c;
+    .dn-card {
+      max-width: 420px;
+      margin: auto;
+      text-align: center;
+      background: rgba(20, 24, 28, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      padding: 26px 22px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    .menu-item.blue .menu-icon {
-      background: rgba(0, 188, 244, 0.1);
-      border-color: rgba(0, 188, 244, 0.3);
-      color: var(--letterboxd-blue);
+    .dn-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 10px auto;
+      border-radius: 50%;
+      background: rgba(0, 224, 84, 0.12);
+      border: 1px solid rgba(0, 224, 84, 0.35);
+      color: var(--letterboxd-green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
     }
-    .menu-item.blue:hover .menu-arrow {
-      color: var(--letterboxd-blue);
+    .dn-badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+      color: #14181c; background: var(--letterboxd-green);
+      padding: 2px 10px; border-radius: 10px;
+      margin-bottom: 10px;
     }
+    .dn-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .dn-text { font-size: 13px; line-height: 1.6; color: #c0d0e0; }
 
-    .hub-footer {
-      margin-top: 22px;
-      font-size: 10.5px;
-      color: #526070;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      padding-top: 14px;
+    html.mobile-blocked .home-container { display: none !important; }
+    html.mobile-blocked .desktop-notice { display: flex; }
+
+    /* Cadangan lewat CSS murni jika JS tidak aktif */
+    @media (hover: none), (pointer: coarse) {
+      .home-container { display: none !important; }
+      .desktop-notice { display: flex; }
     }
   </style>
 </head>
 <body>
 
-  <div id="bgLayer"></div>
-
-  <div class="main-container">
-    <div class="hub-header">
-      <div class="hub-badge">CineHub Collection</div>
-      <h1 class="hub-title">Hub Menu Utama</h1>
-      <p class="hub-subtitle">Pilih perangkat dan generator ulasan film kustom Anda di bawah ini.</p>
-    </div>
-
-    <div class="menu-list">
-      <!-- Tombol 1: Calendar / Review Generator -->
-      <a href="calendar.html" class="menu-item">
-        <div class="menu-icon"><i class="fa-solid fa-calendar-days"></i></div>
-        <div class="menu-content">
-          <div class="menu-name">Movie Calendar & Review</div>
-          <div class="menu-desc">Kelola kalender tontonan film bulanan dan generator poster ulasan.</div>
-        </div>
-        <div class="menu-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-      </a>
-
-      <!-- Tombol 2: Signature Dual-Picture Review Generator -->
-      <a href="dualpicture.html" class="menu-item orange">
-        <div class="menu-icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
-        <div class="menu-content">
-          <div class="menu-name">Dual-Picture Review Generator</div>
-          <div class="menu-desc">Buat kartu ulasan poster dan cinematic stills persegi (1:1) ala Letterboxd.</div>
-        </div>
-        <div class="menu-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-      </a>
-
-      <!-- Tombol 3: Year in Review (Baru) -->
-      <a href="https://sites.google.com/view/letterboxd-pro-tmdb-api-wrappe/yearinreview" target="_blank" rel="noopener noreferrer" class="menu-item blue">
-        <div class="menu-icon"><i class="fa-solid fa-chart-pie"></i></div>
-        <div class="menu-content">
-          <div class="menu-name">Year in Review <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px; opacity: 0.7;"></i></div>
-          <div class="menu-desc">Rangkuman statistik tahunan film yang telah ditonton beserta rekap data lengkap.</div>
-        </div>
-        <div class="menu-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-      </a>
-    </div>
-
-    <div class="hub-footer">
-      <span>by Hwang • Powered by Letterboxd & TMDB API</span>
+  <!-- PESAN: HANYA DAPAT DIAKSES VIA DESKTOP -->
+  <div class="desktop-notice" id="desktopNotice" role="alert">
+    <div class="dn-card">
+      <div class="dn-icon"><i class="fa-solid fa-desktop"></i></div>
+      <div class="dn-badge">Desktop</div>
+      <div class="dn-title">Hanya Tersedia di Desktop</div>
+      <p class="dn-text">
+        Hanya dapat diakses melalui komputer atau laptop (desktop).
+        Silakan buka kembali halaman ini menggunakan perangkat desktop agar seluruh fitur dapat berjalan dengan baik.
+      </p> 
     </div>
   </div>
+
+  <!-- Layer Background Dinamis & Overlay -->
+  <div id="bgLayer" class="bg-layer"></div>
+  <div class="bg-overlay"></div>
+
+  <div class="home-container">
+    <div></div> <!-- Spacer atas -->
+
+    <div class="content-wrapper">
+      <h1 class="home-title">Hwang's Cine<span>Hub</span></h1>
+      <p class="home-subtitle">Dibuat dan digunakan untuk keperluan pribadi.</p>
+
+      <div class="menu-grid">
+        <!-- Tombol 1: Monthly Calendar -->
+        <a href="https://sites.google.com/view/kalenderhwangik/movie-calendar" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div class="card-title">Monthly Calendar</div>
+          <div class="card-desc">Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.</div>
+        </a>
+
+        <!-- Tombol 2: Custom Posters (Review Generator) -->
+        <a href="https://sites.google.com/view/dual-picture-signature-templat/poster-reviewer" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-film"></i>
+          </div>
+          <div class="card-title">Custom Posters</div>
+          <div class="card-desc">Generator template poster ulasan film siap post untuk media sosial.</div>
+        </a>
+
+        <!-- Tombol 3: Movie Collage -->
+        <a href="https://sites.google.com/view/custom-favorite-thematic-colla/collage" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div class="card-title">Movie Collage</div>
+          <div class="card-desc">Buat kolase poster film bertema bebas dengan kustomisasi judul sesukamu.</div>
+        </a>
+
+        <!-- Tombol 4: Year in Review -->
+        <a href="https://sites.google.com/view/letterboxd-pro-tmdb-api-wrappe/yearinreview" class="menu-card">
+          <div class="card-badge">Active</div>
+          <div class="card-icon">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div class="card-title">Year in Review</div>
+          <div class="card-desc">Rangkuman statistik tahunan film yang telah ditonton beserta rekap data lengkap.</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer Bawah -->
+    <div class="home-footer">
+      Inspired by Letterboxd. by Hwang
+    </div>
+  </div>
+
+  <script>
+    /* ================================================================
+       KUNCI DESKTOP
+       ================================================================ */
+    function isUnsupportedDevice() {
+      const ua = navigator.userAgent || '';
+      const mq = q => !!(window.matchMedia && window.matchMedia(q).matches);
+      const touchPoints = navigator.maxTouchPoints || 0;
+
+      const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|Opera Mini|IEMobile|BlackBerry|webOS/i.test(ua);
+      const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
+      const macTouch = /Macintosh/i.test(ua) && touchPoints > 1;          // iPhone/iPad dengan "Request Desktop Website"
+      const touchOnly = touchPoints > 0 && !mq('(any-pointer: fine)');    // layar sentuh tanpa mouse/trackpad
+      const coarsePrimary = mq('(pointer: coarse)') || mq('(hover: none)');
+      const smallScreen = screen.width > 0 && Math.min(screen.width, screen.height) < 480;
+
+      return mobileUA || uaDataMobile || macTouch || touchOnly || coarsePrimary || smallScreen;
+    }
+
+    function applyDeviceGate() {
+      const blocked = isUnsupportedDevice();
+      document.documentElement.classList.toggle('mobile-blocked', blocked);
+      return blocked;
+    }
+
+    applyDeviceGate();
+
+    /* ================================================================
+       LOAD BACKGROUND DARI SPREADSHEET
+       ================================================================ */
+    const BG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAF1umoNPkLzc7_T948TZOrKVp2FY9qg_7cSOHM380P3-i0fm2u-wGc5ks4OC89L03EDRNcZ8xyGc/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(BG_SHEET_CSV_URL, {
+      download: true,
+      header: false,
+      skipEmptyLines: true,
+      complete: function(results) {
+        if (results.data && results.data.length > 0 && results.data[0].length > 0) {
+          const bgUrl = results.data[0][0].trim();
+          
+          if (bgUrl && bgUrl.startsWith("http")) {
+            const bgLayer = document.getElementById("bgLayer");
+            bgLayer.style.backgroundImage = `url('${bgUrl}')`;
+            setTimeout(() => {
+              bgLayer.classList.add("loaded");
+            }, 100);
+          }
+        }
+      }
+    });
+  </script>
 
 </body>
 </html>
