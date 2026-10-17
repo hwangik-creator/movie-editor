@@ -1,7 +1,5 @@
 /* ==========================================================================
-   PENGATURAN MENU & TOMBOL HWANG'S CINEHUB
-   - Ubah "active: true" menjadi "active: false" jika ingin mematikan tombol.
-   - Efek warna hijau, kursor, dan badge akan otomatis berubah jadi "Soon" (redup).
+   PENGATURAN MENU & TOMBOL HWANG'S CINEHUB (DENGAN TRANSISI HALUS)
    ========================================================================== */
 
 const menuList = [
@@ -10,7 +8,7 @@ const menuList = [
     desc: "Buat kalender bulanan estetik dari file CSV Diary Letterboxd kamu.",
     url: "https://sites.google.com/view/kalenderhwangik/movie-calendar",
     icon: "fa-calendar-days",
-    active: true // true = Aktif (Hijau), false = Mati (Redup / Soon)
+    active: true
   },
   {
     title: "Custom Posters",
@@ -31,11 +29,11 @@ const menuList = [
     desc: "Rangkuman statistik tahunan film yang telah ditonton beserta rekap data lengkap.",
     url: "https://sites.google.com/view/letterboxd-pro-tmdb-api-wrappe/yearinreview",
     icon: "fa-chart-pie",
-    active: false // Ubah ke false jika sewaktu-waktu mau dimatikan
+    active: false
   }
 ];
 
-// Script otomatis untuk merender tombol ke halaman Home
+// Script otomatis untuk merender tombol dengan efek transisi klik halus
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("menuGrid");
   if (!grid) return;
@@ -46,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUrl = item.active ? item.url : "#";
 
     return `
-      <a href="${targetUrl}" class="menu-card ${statusClass}">
+      <a href="${targetUrl}" class="menu-card ${statusClass}" ${item.active ? 'data-smooth-link' : ''}>
         <div class="card-badge">${badgeText}</div>
         <div class="card-icon">
           <i class="fa-solid ${item.icon}"></i>
@@ -56,4 +54,21 @@ document.addEventListener("DOMContentLoaded", () => {
       </a>
     `;
   }).join("");
+
+  // Efek transisi halus (fade out) saat tombol diklik
+  document.querySelectorAll('a[data-smooth-link]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault(); // Tahan sebentar pindahnya
+      const destination = this.href;
+
+      // Buat efek layar perlahan menggelap secara halus (fade out)
+      document.body.style.transition = "opacity 0.3s ease";
+      document.body.style.opacity = "0";
+
+      // Pindah halaman setelah animasi selesai (300 milidetik)
+      setTimeout(() => {
+        window.location.href = destination;
+      }, 300);
+    });
+  });
 });
